@@ -1,0 +1,92 @@
+## ID of the experiment
+id=CrowdMOT03
+## Summary of the experiment
+expSummary=Are eye movements consistent in left-right symmetry
+## Author of the experiment
+author=FD
+## Configuration file created
+Date=19-Feb-2013
+## Directory where trajectories are stored
+trajDir=../data/trajectories
+## Directory where protocols are stored
+protDir=../data/protocols
+## Output directory for data
+outDir=../data/responses
+## Directory for eye data
+eyeDir=../data/eyetracks
+## Directory for processed eye data
+eyeProcessedDir=../data/eyetracks_processed
+## Directory for parsed eye data
+parsedDir=../data/parsedEye
+## Directory for experiment results
+resultsDir=../results
+## Directory for .mat files
+datamatDir=../data/datamat
+## Name of file with clean eye data
+eyematFile=eyeData.mat
+## Name of file with clean eye data
+trackmatFile=trackData.mat
+## Name of file with clean responses
+responsematFile=response.mat
+# format of protocol file
+protStringPattern=%d%d%d%q%d%d
+# format of response file
+respStringPattern=%d,%d,%d,%d,%d,"%s",%2.3f,%d\n
+## Debug session
+eDebug=1
+## Are we working on experimental computer?
+## 1 - my computer, 2 - experimental computer
+environment=1
+## Key for exit experiment
+quitKey=q
+##############################
+## Experiment configuration ##
+##############################
+## Number of targets that will be tracked
+targets=1
+## Distractor levels in experiment
+distractors=7
+## Framerate for the experiment
+fps=85
+## Duration of one trial (in seconds)
+duration=8
+## Movement speed of dots in experiment
+speed=5
+#################################################
+###### Trajectory generation configuration ######
+#################################################
+## Width of grid for initial positions of dots (in degrees)
+startWidth=18
+## Width of grid for initial positions of dots (in degrees)
+startHeigth=18
+## Range of arena (half of the 
+fieldEdgeLength=30
+## Size of the starting grid (nxn)
+gridSize=7
+## Probablity of direction change per frame
+changeDirectionProb= 0.03
+## How much will direction change
+directionChange=2
+## Number of random trajectories that will be generated
+traj=999
+## Number of random trajectories that will be generated
+generatedFps=100
+## Generated duration of one trial (in seconds)
+generatedDuration=10
+## concetration parameters for von mises
+k=40
+###############################################
+###### Protocol generation configuration ######
+###############################################
+## Number of protocols
+protocols=100
+## Number of blocks
+blocks=6
+## Number of trials in block
+trials=15
+## Number of repeating trials in block
+repInBlock=5
+## Random tasks in block 
+ranInBlock=5
+## Random tasks in block 
+nTrialsTraining=5
