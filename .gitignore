@@ -40,15 +40,9 @@ rsconnect/
 data
 
 # no markdown output
-R/exp1/*.html
-R/exp1/*.pdf
-R/exp1/*.docx
-R/exp2/*.html
-R/exp2/*.pdf
-R/exp2/*.docx
-R/exp3/*.html
-R/exp3/*.pdf
-R/exp3/*.docx
-R/exp4/*.html
-R/exp4/*.pdf
-R/exp4/*.docx
+R/*.html
+R/*.pdf
+R/*.docx
+
+# do not store plots
+plots
