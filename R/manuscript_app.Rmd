@@ -1,5 +1,5 @@
 ---
-title: "manuscript - JEP:HPP"
+title: "manuscript - APP"
 author: "Filip Dechterenko"
 date: '`r format(Sys.time(), "%d %B, %Y")`'
 output: html_document
@@ -7,8 +7,7 @@ output: html_document
 
 ## Load libraries
 
-```{r load libraries}
-here::set_here("../data")
+```{r load libraries, warning=F, message=F}
 
 if (!require(tidyverse)) {install.packages("tidyverse"); library(tidyverse)}
 if (!require(ez)) {install.packages("ez"); library(ez)}
@@ -16,22 +15,27 @@ if (!require(psyphy)) {install.packages("psyphy"); library(psyphy)}
 
 if (!require(here)) {install.packages("here")}
 
-
 theme_set(theme_bw(16))
 source("tools.R")
 
+data_pth <- here::here("..", "data")
+plot_pth <- here::here("..", "plots")
+
+if(!dir.exists(plot_pth)) {
+  dir.create(plot_pth)
+}
 ```
 
 # Experiment 1a
 
 ```{r load data - exp 1a}
-df_exp1a <- readRDS(here::here("..","data","exp1a","responses","responses_150330.rds")) %>% 
+df_exp1a <- readRDS(file.path(data_pth,"exp1a","responses","responses_150330.rds")) %>% 
   filter(block != 0) %>% 
   filter(restk != "64") %>% # originally, we colledcted three levels of variaiblity, but the condition with kappa=64 showed similar results as kappa = 16
   as_data_frame() %>% 
   mutate(restk2 = recode(restk, `4` = "Brownian-like", `16` = "Ballistic-like"))
 
-participants_exp1a <- read.csv(here::here("..","data","exp1a","participants_150526.csv"))
+participants_exp1a <- read.csv(file.path(data_pth,"exp1a","participants_150526.csv"))
 
 ```
 
@@ -44,7 +48,7 @@ c(mean(participants_exp1a$age), sd(participants_exp1a$age)) %>% round(2)
 
 ## Results
 
-```{r}
+```{r exp1 results accuracy}
 df_exp1a %>% 
   group_by(restk) %>% 
   summarize(accuracy_mean = mean(accuracy, na.rm = T)) %>% 
@@ -60,51 +64,38 @@ df_exp1a %>%
 ## Figure 1
 
 ```{r Figure 1}
-traj_k64 <- read.table("../data/exp1/trajectories/T001_64_rest4.csv") %>% select(x = V1,y = V2) %>% as_data_frame()
+traj_k64 <- read.table(file.path(data_pth, "exp1a", "trajectories", "T001_64_rest4.csv")) %>% select(x = V1,y = V2) %>% as_data_frame()
 p1 <- traj_k64 %>% ggplot(aes(x,y)) + geom_point() + theme(aspect.ratio = 1) + xlim(-15,15)+ylim(-15,15) +
   ggtitle("Ballistic-like")
 
-traj_k4 <- read.table("../data/exp1/trajectories/T001_4_rest4.csv") %>% select(x = V3,y = V4) %>% as_data_frame()
+traj_k4 <- read.table(file.path(data_pth, "exp1a", "trajectories", "T001_4_rest4.csv")) %>% select(x = V3,y = V4) %>% as_data_frame()
 p2 <- traj_k4 %>% ggplot(aes(x,y)) + geom_point() + theme(aspect.ratio = 1) + xlim(-15,15)+ylim(-15,15)+
   ggtitle("Brownian-like")
 gridExtra::grid.arrange(p1,p2, ncol = 2)
-ggsave("Figure1_ballistic.png", p1, width = 6, height = 6)
-ggsave("Figure1_brownian.png", p2, width = 6, height = 6)
-ggsave("Figure1_ballistic.eps", p1, width = 6, height = 6)
-ggsave("Figure1_brownian.eps", p2, width = 6, height = 6)
+
+
+ggsave(file.path(plot_pth, "Figure1_ballistic.png"), p1, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Figure1_brownian.png"), p2, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Figure1_ballistic.eps"), p1, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Figure1_brownian.eps"), p2, width = 6, height = 6)
 ```
 
 ## Figure 2
 
 ```{r Figure 2}
 
-plot_fig2 <- function(restk_var, ggtit) {
-  df_exp1a %>%
-  filter(restk == restk_var) %>%
-  ggplot(aes(x = type, y = accuracy)) + 
-  stat_summary(fun.data = "mean_cl_boot") + 
-  stat_summary(fun.y = mean, geom = "line", aes(group = 1)) + 
-  geom_hline(yintercept=0.125) + 
-  theme(aspect.ratio = 1)  + xlab(expression("Target's"~kappa)) + 
-  ylab("Accuracy") + 
-  ylim(0,1)+
-  scale_x_continuous(expression("Target's"~kappa~" (log scale)"),breaks = c(1,8,16,32,64,128),labels = c("1","8","16","32","64","128"), trans = "log2") + 
-  geom_vline(xintercept = restk_var, linetype = 2) +
-  ggtitle(ggtit)
-}
-
 p1 <- plot_fig2(4, "Brownian-like-distractors")
 p2 <- plot_fig2(16, "Ballistic-like-distractors")
   
 gridExtra::grid.arrange(p1,p2, ncol = 2)
 
-ggsave("plots/Figure2_brownian.png", p1, width = 6, height = 6)
-ggsave("plots/Figure2_ballistic.png", p2, width = 6, height = 6)
-ggsave("plots/Figure2_brownian.eps", p1, width = 6, height = 6)
-ggsave("plots/Figure2_ballistic.eps", p2, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Figure2_brownian.png"), p1, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Figure2_ballistic.png"), p2, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Figure2_brownian.eps"), p1, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Figure2_ballistic.eps"), p2, width = 6, height = 6)
 ```
 
-```{r fitting weibull}
+```{r exp1a - fitting weibull}
 
 df.pf <- df_exp1a %>% 
   filter(restk2 == "Ballistic-like", type %in% c(2,4,8,16,32))
@@ -127,8 +118,8 @@ p
 
 ## Overall differences
 
-```{r}
-df_exp1 %>% 
+```{r exp 1a - overall differences, warning=F, message = F}
+df_exp1a %>% 
   filter(restk2 == "Brownian-like") %>% 
   ez::ezANOVA(dv = accuracy,
         wid = subject,
@@ -136,7 +127,7 @@ df_exp1 %>%
         detailed = T) %>% 
   apa::anova_apa()
 
-df_exp1 %>% 
+df_exp1a %>% 
   filter(restk2 == "Ballistic-like") %>% 
   ez::ezANOVA(dv = accuracy,
         wid = subject,
@@ -147,7 +138,7 @@ df_exp1 %>%
 
 ## Tests with baseline
 
-```{r}
+```{r exp 1a - test vs baseline}
 df_exp1a %>% 
   group_by(type, restk,subject) %>% 
   summarize(accuracy = mean(accuracy)) %>% 
@@ -160,7 +151,7 @@ df_exp1a %>%
 ```
 
 ## Difference between symmetrical cases
-```{r}
+```{r exp1a - difference between symmetrical case, warning=F, message = F}
 df_exp1a %>% 
   filter((restk == 4 & type == 16) |(restk == 16 & type == 4)) %>% 
   ez::ezANOVA(
@@ -175,11 +166,11 @@ df_exp1a %>%
 
 # Experiment 1b
 
-```{r load data - experiment 1b}
-load(here::here("..","data","exp1b","responses","responses_150622.RData"))
-df_exp1b <- filter(df, block != 0) 
+```{r exp1b  - load data}
+df_exp1b <- readRDS(file.path(data_pth,"exp1b","responses","responses_150622.rds")) %>% 
+  filter(block != 0) 
 
-participants_exp2 <- read.csv(here::here("..","data","exp1b","participants_150526.csv"), fileEncoding = "UTF8")
+participants_exp1b <- read.csv(file.path(data_pth,"exp1b","participants_150526.csv"), fileEncoding = "UTF8")
 
 df2_exp1b <- rbind(df_exp1b,df_exp1b)
 df2_exp1b$version <- 2
@@ -195,53 +186,29 @@ df2_exp1b$version <- factor(df2_exp1b$version, labels = c("fix distractors' k", 
 
 ## Participant info
 ```{r}
-table(participants_exp2$gender)
-c(mean(participants_exp2$age), sd(participants_exp2$age)) %>% round(2)
+table(participants_exp1b$gender)
+c(mean(participants_exp1b$age), sd(participants_exp1b$age)) %>% round(2)
 ```
 
 ## Figure 3
 
 ```{r plots experiment 2}
-plot_fig3 <- function(restk_var, show_legend = F) {
-  
-  p <- df2_exp1b %>%
-  filter(restk == restk_var) %>%
-  ggplot(aes(x = type, y = accuracy, group = version)) + 
-  #facet_grid(~ restk) + 
-  stat_summary(fun.data = "mean_cl_boot") + 
-  stat_summary(fun.y = mean, geom = "line", aes(group = version, linetype = version)) + 
-  geom_hline(yintercept=0.125) +
-  theme(aspect.ratio = 1) + 
-  ylab("Accuracy") + 
-  ylim(0,1)+
-  scale_x_continuous(expression("Variable"~kappa~" (log scale)"),breaks = c(2,4,8,16,64),labels = c("2","4","8","16","64"), trans = "log2") + 
-  scale_linetype_manual(values = c(2,1)) +
-  geom_vline(xintercept = restk_var, linetype = 2) +
-  ggtitle(bquote("Fixed "~kappa~"= "~.(restk_var)))
-  
-  if (show_legend) {
-    p 
-  } else {
-    p + theme(legend.position="none")
-  }
-  
-}
 
 p_k2 <- plot_fig3(2)
 p_k4 <- plot_fig3(4)
 p_k8 <- plot_fig3(8)
 p_k16 <- plot_fig3(16)
 p_k64 <- plot_fig3(64)
-p_k64 <- plot_fig3(64, show_legend = T)
+p_k64_legend <- plot_fig3(64, show_legend = T)
 
 
-gridExtra::grid.arrange(p_k2,p_k4, p_k8, p_k16, p_k64, ncol = 5)
-ggsave("plots/Fig3_k2.eps", p_k2, width = 6, height = 6)
-ggsave("plots/Fig3_k4.eps", p_k4, width = 6, height = 6)
-ggsave("plots/Fig3_k8.eps", p_k8, width = 6, height = 6)
-ggsave("plots/Fig3_k16.eps", p_k16, width = 6, height = 6)
-ggsave("plots/Fig3_k64.eps", p_k64, width = 6, height = 6)
-ggsave("plots/Fig3_k64_legend.eps", p_k64_legend, width = 6, height = 6)
+gridExtra::grid.arrange(p_k2,p_k4, p_k8, p_k16, p_k64, ncol = 3)
+ggsave(file.path(plot_pth, "Fig3_k2.eps"), p_k2, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Fig3_k4.eps"), p_k4, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Fig3_k8.eps"), p_k8, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Fig3_k16.eps"), p_k16, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Fig3_k64.eps"), p_k64, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Fig3_k64_legend.eps"), p_k64_legend, width = 6, height = 6)
 # final plot was created in inkscape
 ```
 
@@ -253,11 +220,11 @@ We run multiple within subject aova
 df3_exp1b <- df2_exp1b %>% group_by(type, restk) %>% do(p=compute.p(.))
 
 df3_exp1b$p <- unlist(df3_exp1b$p) %>% round(3)
-df4_exp2 <- df2_exp1b %>% group_by(type, restk) %>% do(ges=compute.des(.))
-df4_exp2$ges <- unlist(df4_exp2$ges) %>% round(2)
-df3_exp1b$ges <- df4_exp2$ges
+df4_exp1b <- df2_exp1b %>% group_by(type, restk) %>% do(ges=compute.des(.))
+df4_exp1b$ges <- unlist(df4_exp1b$ges) %>% round(2)
+df3_exp1b$ges <- df4_exp1b$ges
 
-df5_exp2 <- df2_exp1b %>% group_by(type, restk, version) %>% summarize(accuracy = mean(accuracy)) %>% 
+df5_exp1b <- df2_exp1b %>% group_by(type, restk, version) %>% summarize(accuracy = mean(accuracy)) %>% 
   group_by(type, restk) %>%
   summarize(acc_diff = accuracy[version == "fix distractors' k"] - accuracy[version == "fix target's k"])
 
@@ -272,7 +239,7 @@ m <- matrix(df3_exp1b$p, nrow = 5)
 m[upper.tri(m, diag = T)] <- NA
 df3_exp1b$p <- as.vector(m)
 
-m <- matrix(df5_exp2$acc_diff, nrow = 5)
+m <- matrix(df5_exp1b$acc_diff, nrow = 5)
 m[upper.tri(m, diag = T)] <- NA
 df3_exp1b$acc_diff <- as.vector(m)
 
@@ -283,90 +250,93 @@ df3_exp1b %>% filter(target_lower_than_dist)
 df3_exp1b %>% filter(p < .05)
 ```
 
-Test with baseline
+## Test with baseline
 
 ```{r}
-df_exp1b %>% group_by(type, restk,subject) %>% summarize(accuracy = mean(accuracy)) %>% group_by(restk, type) %>% filter(accuracy <1) %>% do(t.test(.$accuracy, mu = .125) %>% broom::tidy()) %>% mutate(p.value = round(p.value, 3)) %>% knitr::kable()
+df_exp1b %>% 
+  group_by(type, restk, subject) %>% 
+  summarize(accuracy = mean(accuracy)) %>% group_by(restk, type) %>%
+  filter(accuracy < 1) %>% 
+  do(t.test(.$accuracy, mu = .125) %>% 
+       broom::tidy()) %>% 
+  mutate(p.value = round(p.value, 3)) %>% 
+  knitr::kable()
 ```
 
 
 # Experiment 2a
 
 ```{r load data - exp 2a}
-load(here::here("..","data","exp2a","responses","responses_150410.RData"))
-df_exp2a <- filter(df, block != 0) 
-df_exp2a <- df_exp2a %>% mutate(restk = restk * 100, type = type * 100)
-participants <- read.csv("../data/exp2/participants_171023.csv")
+df_exp2a <- readRDS(file.path(data_pth,"exp2a","responses","responses_150410.rds")) %>% 
+  filter(block != 0) %>% 
+  mutate(restk = restk * 100, type = type * 100) %>% 
+  mutate(restk2 = recode(restk, `2` = "Slow-moving-distractors", `4` = "Fast-moving-distractors"))
+
+participants_exp2a <- read.csv(file.path(data_pth,"exp2a","participants_171023.csv"))
 ```
 
 ## Participant info
-```{r exp3 participant info}
-table(participants_exp3$gender)
-c(mean(participants_exp3$age), sd(participants_exp3$age)) %>% round(2)
+
+```{r exp2a - participant info}
+table(participants_exp2a$gender)
+c(mean(participants_exp2a$age), sd(participants_exp2a$age)) %>% round(2)
 ```
 
 ## Results
 
-```{r}
-df_exp2a %>% group_by(restk) %>% summarize(accuracy_mean = mean(accuracy, na.rm = T) %>% round(2))
+```{r exp2a - results accuracy}
+df_exp2a %>% 
+  group_by(restk) %>% 
+  summarize(accuracy_mean = mean(accuracy, na.rm = T)) %>% knitr::kable(digits = 2)
 ```
 
 ## Figure 4
 
-```{r}
-p1 <- df_exp2a %>%
-  filter(restk == 2) %>%
-  ggplot(aes(x = type, y = accuracy)) + 
-  stat_summary(fun.data = "mean_cl_boot") + 
-  stat_summary(fun.y = mean, geom = "line", aes(group = 1)) + 
-  geom_hline(yintercept=0.125) + 
-  theme(aspect.ratio = 1) + 
-  ylab("Accuracy") + 
-  ylim(0,1)+
-  geom_vline(xintercept = 2, linetype = 2) +
-  scale_x_continuous("Target's speed (log scale)",breaks = c(0.5,1,2,3,4,6,8),labels = c("0.5","1","2","3","4","6","8"), trans = "log2") + 
-  ggtitle("Slow-moving-distractors")
-p2 <- df_exp2a %>%
-  filter(restk == 4) %>%
-  ggplot(aes(x = type, y = accuracy)) + 
-  stat_summary(fun.data = "mean_cl_boot") + 
-  stat_summary(fun.y = mean, geom = "line", aes(group = 1)) + 
-  geom_hline(yintercept=0.125) + 
-  theme(aspect.ratio = 1)  + 
-  ylab("Accuracy") + 
-  ylim(0,1)+
-  geom_vline(xintercept = 4, linetype = 2) +
-  scale_x_continuous("Target's speed (log scale)",breaks = c(0.5,1,2,3,4,6,8),labels = c("0.5","1","2","3","4","6","8"), trans = "log2") + 
-  ggtitle("Fast-moving-distractors")
+```{r Figure 4}
+
+p1 <- plot_fig4(2, ggtit = "Slow-moving-distractors") 
+
+p2 <- plot_fig4(4, ggtit = "Fast-moving-distractors")
+
 gridExtra::grid.arrange(p1,p2, ncol = 2)
 
-ggsave("plots/Figure4_slow.png", p1, width = 6, height = 6)
-ggsave("plots/Figure4_fast.png", p2, width = 6, height = 6)
-ggsave("plots/Figure4_slow.eps", p1, width = 6, height = 6)
-ggsave("plots/Figure4_fast.eps", p2, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Figure4_slow.png"), p1, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Figure4_fast.png"), p2, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Figure4_slow.eps"), p1, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Figure4_fast.eps"), p2, width = 6, height = 6)
 ```
 
 ## Statistics
 
-```{r exp 3 - statistics}
-df_exp2a %>% group_by(restk) %>% summarize(acc = mean(accuracy) * 100, sd = sd(accuracy) *100)
+```{r exp 2a - statistics}
+df_exp2a %>% 
+  group_by(restk) %>% 
+  summarize(acc = mean(accuracy) * 100, sd = sd(accuracy) * 100) %>% 
+  knitr::kable()
 ```
 
-Difference between symmetrical cases
-```{r}
-df_sym <- df_exp2a %>% filter((restk == 2 & type == 4) |(restk == 4 & type == 2))
-ez::ezANOVA(df_sym,
-        dv=accuracy,
+## Difference between symmetrical cases
+```{r exp 2a - symmetrical case, warning=F, message=F}
+
+df_exp2a %>% 
+  filter((restk == 2 & type == 4) |(restk == 4 & type == 2)) %>% 
+  ez::ezANOVA(
+        dv = accuracy,
         wid = subject,
-        within = restk)
-ez::ezStats(df_sym,
-        dv=accuracy,
+        within = restk, 
+        detailed = T) %>% 
+  apa::anova_apa()
+
+df_exp2a %>% 
+  filter((restk == 2 & type == 4) |(restk == 4 & type == 2)) %>%
+  ez::ezStats(
+        dv = accuracy,
         wid = subject,
         within = restk)
 
 ```
 
-Test with baseline
+## Test with baseline
 
 ```{r}
 df_exp2a %>% group_by(type, restk,subject) %>% summarize(accuracy = mean(accuracy)) %>% group_by(restk, type) %>% filter(accuracy <1) %>% do(t.test(.$accuracy, mu = .125) %>% broom::tidy()) %>% mutate(p.value = round(p.value, 3)) %>% knitr::kable()
@@ -376,178 +346,90 @@ df_exp2a %>% group_by(type, restk,subject) %>% summarize(accuracy = mean(accurac
 
 # Experiment 2b
 
-```{r load data - exp 2b}
-load("../data/exp2_fin/responses/responses_171023.RData")
+```{r exp 2b - load data}
+df_exp2b <- readRDS(here::here("..", "data", "exp2b", "responses", "responses_171023.rds")) %>% 
+ filter(block != 0) 
 
-df_exp2b <- filter(df, block != 0) 
 df_exp2b <- df_exp2b %>% mutate(restk = restk * 100, type = type * 100)
-rm(df)
 
-participants_exp4 <- read.csv("../data/exp2_fin/participants_171023.csv")
+participants_exp2b <- read.csv(here::here("..", "data", "exp2b", "participants_171023.csv"))
 
-df2_exp1bb <- rbind(df_exp2b, df_exp2b)
-df2_exp1bb$version <- 2
-df2_exp1bb$version[1:nrow(df_exp2b)] <- 1
+df2_exp2b <- rbind(df_exp2b, df_exp2b)
+df2_exp2b$version <- 2
+df2_exp2b$version[1:nrow(df_exp2b)] <- 1
 
 # this is a little hack, just to make a correct ggplot with one line
 tmp <- df_exp2b$restk
-df2_exp1bb$restk[df2_exp1bb$version == 2] <- df_exp2b$type
-df2_exp1bb$type[df2_exp1bb$version == 2] <- tmp
+df2_exp2b$restk[df2_exp2b$version == 2] <- df_exp2b$type
+df2_exp2b$type[df2_exp2b$version == 2] <- tmp
 
-df2_exp1bb$version <- factor(df2_exp1bb$version, labels = c("fix distractors' speed", "fix target's speed"))
+df2_exp2b$version <- factor(df2_exp2b$version, labels = c("fix distractors' speed", "fix target's speed"))
 ```
 
 ## Participant info
-```{r exp4 - participants info}
-table(participants_exp4$gender)
-c(mean(participants_exp4$age), sd(participants_exp4$age)) %>% round(2)
+```{r exp2b - participants info}
+table(participants_exp2b$gender)
+c(mean(participants_exp2b$age), sd(participants_exp2b$age)) %>% round(2)
 ```
 
 ## Figure 5
 
 ```{r Figure 5}
 
-p_sp05 <- df2_exp1bb %>%
-  filter(restk == .5) %>%
-  ggplot(aes(x = type, y = accuracy, group = version)) + 
-  stat_summary(fun.data = "mean_cl_boot") + 
-  stat_summary(fun.y = mean, geom = "line", aes(group = version, linetype = version)) + 
-  geom_hline(yintercept=0.125) +
-  theme(aspect.ratio = 1) + 
-  ylab("Accuracy") + 
-  ylim(0,1)+
-  theme(legend.position="none") +
-  scale_x_continuous("Speed of the others (log scale)",breaks = c(.5,1,2,4,8),labels = c(".5","1","2","4","8"),
-                     trans = "log2") + 
-  geom_vline(xintercept = .5, linetype = 2) +
-  ggtitle(expression("Fixed speed = 0.5"*degree*"/s"))
+p_sp05 <- plot_fig5(0.5)
+p_sp1 <- plot_fig5(1)
+p_sp2 <- plot_fig5(2)
+p_sp4 <- plot_fig5(4)
+p_sp8 <- plot_fig5(8)
+p_sp8_legend <- plot_fig5(8, show_legend = T)
 
-p_sp1 <- df2_exp1bb %>%
-  filter(restk == 1) %>%
-  ggplot(aes(x = type, y = accuracy, group = version)) + 
-  #facet_grid(~ restk) + 
-  stat_summary(fun.data = "mean_cl_boot") + 
-  stat_summary(fun.y = mean, geom = "line", aes(group = version, linetype = version)) + 
-  geom_hline(yintercept=0.125) +
-  theme(aspect.ratio = 1) + 
-  ylab("Accuracy") + 
-  ylim(0,1)+
-  theme(legend.position="none") +
-  scale_x_continuous("Speed of the others (log scale)",breaks = c(.5,1,2,4,8),labels = c(".5","1","2","4","8"),
-                     trans = "log2") + 
-  geom_vline(xintercept = 1, linetype = 2) +
-  ggtitle(expression("Fixed speed = 1"*degree*"/s"))
-
-p_sp2 <- df2_exp1bb %>%
-  filter(restk == 2) %>%
-  ggplot(aes(x = type, y = accuracy, group = version)) + 
-  #facet_grid(~ restk) + 
-  stat_summary(fun.data = "mean_cl_boot") + 
-  stat_summary(fun.y = mean, geom = "line", aes(group = version, linetype = version)) + 
-  geom_hline(yintercept=0.125) +
-  theme(aspect.ratio = 1) + 
-  ylab("Accuracy") + 
-  ylim(0,1)+
-  theme(legend.position="none") +
-  scale_x_continuous("Speed of the others (log scale)",breaks = c(.5,1,2,4,8),labels = c(".5","1","2","4","8"),
-                     trans = "log2") + 
-  geom_vline(xintercept = 2, linetype = 2) +
-  ggtitle(expression("Fixed speed = 2"*degree*"/s"))
-
-p_sp4 <- df2_exp1bb %>%
-  filter(restk == 4) %>%
-  ggplot(aes(x = type, y = accuracy, group = version)) + 
-  #facet_grid(~ restk) + 
-  stat_summary(fun.data = "mean_cl_boot") + 
-  stat_summary(fun.y = mean, geom = "line", aes(group = version, linetype = version)) + 
-  geom_hline(yintercept=0.125) +
-  theme(aspect.ratio = 1) + 
-  ylab("Accuracy") + 
-  ylim(0,1)+
-  theme(legend.position="none") +
-  scale_x_continuous("Speed of the others (log scale)",breaks = c(.5,1,2,4,8),labels = c(".5","1","2","4","8"),
-                     trans = "log2") + 
-  geom_vline(xintercept = 4, linetype = 2) +
-  ggtitle(expression("Fixed speed = 4"*degree*"/s"))
-
-p_sp8 <- df2_exp1bb %>%
-  filter(restk == 8) %>%
-  ggplot(aes(x = type, y = accuracy, group = version)) + 
-  #facet_grid(~ restk) + 
-  stat_summary(fun.data = "mean_cl_boot") + 
-  stat_summary(fun.y = mean, geom = "line", aes(group = version, linetype = version)) + 
-  geom_hline(yintercept=0.125) +
-  theme(aspect.ratio = 1) + 
-  ylab("Accuracy") + 
-  ylim(0,1)+
-  theme(legend.position="none") +
-  scale_x_continuous("Speed of the others (log scale)",breaks = c(.5,1,2,4,8),labels = c(".5","1","2","4","8"),
-                     trans = "log2") + 
-  geom_vline(xintercept = 8, linetype = 2) +
-  ggtitle(expression("Fixed speed = 8"*degree*"/s"))
-
-p_sp8_legend <- df2_exp1bb %>%
-  filter(restk == 8) %>%
-  ggplot(aes(x = type, y = accuracy, group = version)) + 
-  #facet_grid(~ restk) + 
-  stat_summary(fun.data = "mean_cl_boot") + 
-  stat_summary(fun.y = mean, geom = "line", aes(group = version, linetype = version)) + 
-  geom_hline(yintercept=0.125) +
-  theme(aspect.ratio = 1) + 
-  ylab("Accuracy") + 
-  ylim(0,1)+
-  scale_x_continuous("Speed of the others (log scale)",breaks = c(.5,1,2,4,8),labels = c(".5","1","2","4","8"),
-                     trans = "log2") + 
-  geom_vline(xintercept = 8, linetype = 2) +
-  ggtitle(expression("Fixed speed = 8"*degree*"/s"))
-
-gridExtra::grid.arrange(p_sp05,p_sp1, p_sp2, p_sp4, p_sp8, ncol = 5)
-ggsave("plots/Fig5_sp05.eps", p_sp05, width = 6, height = 6)
-ggsave("plots/Fig5_sp1.eps", p_sp1, width = 6, height = 6)
-ggsave("plots/Fig5_sp2.eps", p_sp2, width = 6, height = 6)
-ggsave("plots/Fig5_sp4.eps", p_sp4, width = 6, height = 6)
-ggsave("plots/Fig5_sp8.eps", p_sp8, width = 6, height = 6)
-ggsave("plots/Fig5_sp8_legend.eps", p_sp8_legend, width = 6, height = 6)
+gridExtra::grid.arrange(p_sp05,p_sp1, p_sp2, p_sp4, p_sp8, ncol = 3)
+ggsave(file.path(plot_pth, "Fig5_sp05.eps"), p_sp05, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Fig5_sp1.eps"), p_sp1, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Fig5_sp2.eps"), p_sp2, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Fig5_sp4.eps"), p_sp4, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Fig5_sp8.eps"), p_sp8, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Fig5_sp8_legend.eps"), p_sp8_legend, width = 6, height = 6)
 # final plot was created in inkscape
 ```
 
 ## Compute the asymmetry
 
-```{r compute the assymetry, warning=F}
-df3_exp1bb <- df2_exp1bb %>% group_by(type, restk) %>% do(p=compute.p(.))
+```{r exp 2b - compute the assymetry, warning=F}
+df3_exp2b <- df2_exp2b %>% group_by(type, restk) %>% do(p=compute.p(.))
 
-df3_exp1bb$p <- unlist(df3_exp1bb$p) %>% round(3)
-df4_exp4 <- df2_exp1bb %>% group_by(type, restk) %>% do(ges=compute.des(.))
-df4_exp4$ges <- unlist(df4_exp4$ges) %>% round(2)
-df3_exp1bb$ges <- df4_exp4$ges
+df3_exp2b$p <- unlist(df3_exp2b$p) %>% round(3)
+df4_exp2b <- df2_exp2b %>% group_by(type, restk) %>% do(ges=compute.des(.))
+df4_exp2b$ges <- unlist(df4_exp2b$ges) %>% round(2)
+df3_exp2b$ges <- df4_exp2b$ges
 
-df5_exp4 <- df2_exp1bb %>% group_by(type, restk, version) %>% summarize(accuracy = mean(accuracy)) %>% 
+df5_exp2b <- df2_exp2b %>% group_by(type, restk, version) %>% summarize(accuracy = mean(accuracy)) %>% 
   group_by(type, restk) %>%
   summarize(acc_diff = accuracy[version == "fix distractors' speed"] - accuracy[version == "fix target's speed"])
 
-m <- matrix(df3_exp1bb$ges, nrow = 5)
+m <- matrix(df3_exp2b$ges, nrow = 5)
 rownames(m) <- levels(df_exp2b$type)
 colnames(m) <- levels(df_exp2b$type)
 m[upper.tri(m,diag = T)] <- NA
 
-df3_exp1bb$ges <- as.vector(m)
+df3_exp2b$ges <- as.vector(m)
 
-m <- matrix(df3_exp1bb$p, nrow = 5)
+m <- matrix(df3_exp2b$p, nrow = 5)
 m[upper.tri(m, diag = T)] <- NA
-df3_exp1bb$p <- as.vector(m)
+df3_exp2b$p <- as.vector(m)
 
-m <- matrix(df5_exp4$acc_diff, nrow = 5)
+m <- matrix(df5_exp2b$acc_diff, nrow = 5)
 m[upper.tri(m, diag = T)] <- NA
-df3_exp1bb$acc_diff <- as.vector(m)
+df3_exp2b$acc_diff <- as.vector(m)
 
 
-df3_exp1bb$target_lower_than_dist <- df3_exp1bb$acc_diff < 0
-df3_exp1bb %>% filter(target_lower_than_dist) 
+df3_exp2b$target_lower_than_dist <- df3_exp2b$acc_diff < 0
+df3_exp2b %>% filter(target_lower_than_dist) %>% knitr::kable()
 
-df3_exp1bb %>% filter(p < 0.05) 
+df3_exp2b %>% filter(p < 0.05) %>% knitr::kable()
 
-differencies <- df3_exp1bb %>% filter(target_lower_than_dist)  %>% .$acc_diff *-1
-differencies %>% range() %>% round(2)
+differencies <- df3_exp2b %>% filter(target_lower_than_dist)  %>% .$acc_diff *-1
+differencies %>% range() %>% round(2) 
 
 ```
 
