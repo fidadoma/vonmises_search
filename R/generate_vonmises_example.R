@@ -40,3 +40,43 @@ df2 %>%
   xlim(-10,10)+
   ylim(-10,10)
 
+
+# another take ------------------------------------------------------------
+
+nDot <- 10000
+
+ang_k16 <- rvonmises(nDot, circular(0), 16, control.circular=list(units="degrees"))
+h <- hist(as.numeric(ang_k16),plot = F, breaks = 0:360)
+h$counts
+data <- data_frame(
+  id = 1:360,
+  ang_bin = h$counts
+)
+
+# Make the plot
+p <- ggplot(data, aes(x=as.factor(id), y=ang_bin)) +       # Note that id is a factor. If x is numeric, there is some space between the first bar
+  
+  # This add the bars with a blue color
+  geom_bar(stat = "identity", fill = "black", width = 1) +
+coord_polar(start = 0) + 
+  scale_x_discrete(breaks = seq(0, 360), labels = seq(0, 360)) +
+  theme(
+    axis.text = element_blank()
+    
+  )
+  # Limits of the plot = very important. The negative value controls the size of the inner circle, the positive one is useful to add size over each bar
+  ylim(-100,120) +
+  
+  # Custom the theme: no axis title and no cartesian grid
+  theme_minimal() +
+  theme(
+    axis.text = element_blank(),
+    axis.title = element_blank(),
+    panel.grid = element_blank(),
+    plot.margin = unit(rep(-2,4), "cm")     # This remove unnecessary margin around plot
+  ) +
+  
+  # This makes the coordinate polar instead of cartesian.
+  coord_polar(start = 0)
+p
+
