@@ -120,7 +120,7 @@ plot_fig4 <- function(restspd, ggtit) {
     ylim(0,1)+
     geom_vline(xintercept = restspd, linetype = 2) +
     scale_x_continuous("Target's speed (log scale)",breaks = c(0.5,1,2,3,4,6,8),labels = c("0.5","1","2","3","4","6","8"), trans = "log2") + 
-    ggtitle("Slow-moving-distractors")
+    ggtitle(ggtit)
 }
 
 plot_fig5 <- function(restspd, show_legend = F) {
