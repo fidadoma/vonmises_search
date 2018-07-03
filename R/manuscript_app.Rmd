@@ -333,7 +333,7 @@ df_exp2a %>%
   ez::ezStats(dv = accuracy,
         wid = subject,
         within = type)
-df_exp2a %>% 
+df_exp2a %>%
   filter(restk2 == "Fast-moving-distractors") %>% 
   ez::ezStats(dv = accuracy,
         wid = subject,
@@ -359,6 +359,24 @@ df_exp2a %>%
         within = as.factor(type), 
         detailed = T) %>% 
   apa::anova_apa()
+
+df_exp2a %>% 
+  filter(restk2 == "Slow-moving-distractors") %>% 
+  mutate(type2 = as.character(type)) %>% 
+  ez::ezANOVA(dv = accuracy,
+        wid = subject,
+        within = type2, 
+        detailed = T) %>% 
+  apa::anova_apa(sph_corr = "none")
+
+df_exp2a %>% 
+  filter(restk2 == "Fast-moving-distractors") %>% 
+  mutate(type2 = as.character(type)) %>% 
+  ez::ezANOVA(dv = accuracy,
+        wid = as.factor(subject),
+        within = as.factor(type2), 
+        detailed = T) %>% 
+  apa::anova_apa(sph_corr = "none")
 ```
 
 ### Difference between symmetrical cases
