@@ -143,3 +143,45 @@ plot_fig5 <- function(restspd, show_legend = F) {
     p + theme(legend.position="none")
   }   
 }
+
+
+create_data_scheme_vonmises <- function(nDot, kappa, t) {
+  ang <- rvonmises(nDot,circular(0), kappa, control.circular=list(units="radians"))
+  
+  y <- cos(ang)
+  x <- sin(ang)
+  
+  df <- data_frame(id = 1:nDot, x, y, t = 1, ang)
+  
+  for(i in 1:t){
+    tmp <- rvonmises(nDot,circular(0), kappa, control.circular=list(units="radians"))
+    ang <- ang + tmp
+    y <- cos(ang)
+    x <- sin(ang)
+    tmp <- data_frame(id = 1:nDot,x, y, t=i, ang)
+    df <- rbind(df, tmp)  
+  }
+  
+  df2 <- df %>% 
+    group_by(id) %>% 
+    mutate(x = cumsum(x), y = cumsum(y)) %>% 
+    ungroup()
+  
+  return(df2)
+}
+plot_vonmises_scheme <- function(df, ggtit) {
+  df %>% 
+    group_by(id) %>% 
+    top_n(1,t) %>% 
+    ggplot(aes(x, y)) + 
+    geom_point(alpha = I(0.1)) + 
+    theme(aspect.ratio = 1) +
+    xlim(-30,30) +
+    ylim(-30,30) +
+    geom_segment(aes(x=0, xend=0, y=0, yend=8), 
+                   arrow = arrow(length = unit(0.5, "cm"), type = "closed"), size = 2, col = "red") +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+    xlab("x [deg]") + 
+    ylab("y [deg]") + 
+    ggtitle(ggtit)
+}
