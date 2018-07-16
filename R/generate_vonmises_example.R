@@ -6,12 +6,12 @@ library(tidyverse)
 
 if(!require(circular)) {install.packages("circular"); library(circular)}
 
-nDot  <- 100L
+nDot  <- 1000L
 t     <- 30
 kappa <- 16
 spd <- 1
 
-ang <- rvonmises(n, circular(0), kappa, control.circular=list(units="degrees"))
+ang <- rvonmises(nDot, circular(0), kappa, control.circular=list(units="degrees"))
 
 y <- cos(ang)
 x <- sin(ang)
@@ -19,7 +19,7 @@ x <- sin(ang)
 df <- data_frame(id = 1:nDot, x, y, t = 1, ang)
 
 for(i in 1:t){
-  ang <- rvonmises(n,circular(0), kappa, control.circular=list(units="degrees"))
+  ang <- rvonmises(nDot,circular(0), kappa, control.circular=list(units="degrees"))
 
   y <- cos(ang)
   x <- sin(ang)
