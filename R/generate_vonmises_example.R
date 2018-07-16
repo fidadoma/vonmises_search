@@ -1,5 +1,5 @@
 
-# create data -------------------------------------------------------------
+# von mises - circle -------------------------------------------------------------
 set.seed(180307)
 
 library(tidyverse)
@@ -7,20 +7,23 @@ library(tidyverse)
 if(!require(circular)) {install.packages("circular"); library(circular)}
 
 nDot  <- 1000L
-t     <- 30
+t     <- 15
 kappa <- 16
 spd <- 1
 
-ang <- rvonmises(nDot, circular(0), kappa, control.circular=list(units="degrees"))
-
+#angStarts <- circular(sample(0:360,nDot)) %>% conversion.circular()
+#ang <- sapply(angStarts, function(x) {rvonmises(1, x, kappa, control.circular=list(units="radians"))})
+ang <- rvonmises(nDot,circular(0), kappa, control.circular=list(units="radians"))
 y <- cos(ang)
 x <- sin(ang)
 
 df <- data_frame(id = 1:nDot, x, y, t = 1, ang)
 
 for(i in 1:t){
-  ang <- rvonmises(nDot,circular(0), kappa, control.circular=list(units="degrees"))
-
+  
+  
+  tmp <- rvonmises(nDot,circular(0), kappa, control.circular=list(units="radians"))
+  ang <- ang + tmp
   y <- cos(ang)
   x <- sin(ang)
   tmp <- data_frame(id = 1:nDot,x, y, t=i, ang)
@@ -33,13 +36,104 @@ df2 <- df %>%
   ungroup()
 
 df2 %>% 
+  group_by(id) %>% 
+  top_n(1,t) %>% 
+  ggplot(aes(x, y)) + 
+  geom_point(alpha = I(0.1)) + 
+  theme(aspect.ratio = 1) +
+  xlim(-30,30)+
+  ylim(-30,30)
+
+df2 %>% 
   filter(id < 6) %>% 
-  ggplot(aes(x,y, col = as.factor(id))) + 
+  ggplot(aes(x,y, col = as.factor(id))) +
+  geom_path() + 
+  theme(aspect.ratio = 1) +
+  xlim(-5,5)+
+  ylim(-5,5)
+
+
+# random initial direction ------------------------------------------------
+
+set.seed(180307)
+
+library(tidyverse)
+
+if(!require(circular)) {install.packages("circular"); library(circular)}
+
+nDot  <- 7L
+t     <- 15
+kappa <- 16
+spd <- 1
+
+angStarts <- circular(sample(0:360,nDot)) %>% conversion.circular()
+ang <- sapply(angStarts, function(x) {rvonmises(1, x, kappa, control.circular=list(units="radians"))})
+#ang <- rvonmises(nDot,circular(0), kappa, control.circular=list(units="radians"))
+y <- runif(nDot, min = -5, max = 5) + cos(ang)
+x <- runif(nDot, min = -5, max = 5) + sin(ang)
+
+df <- data_frame(id = 1:nDot, x, y, t = 1, ang)
+
+for(i in 1:t){
+  
+  
+  tmp <- rvonmises(nDot,circular(0), kappa, control.circular=list(units="radians"))
+  ang <- ang + tmp
+  y <- cos(ang)
+  x <- sin(ang)
+  tmp <- data_frame(id = 1:nDot,x, y, t=i, ang)
+  df <- rbind(df, tmp)  
+}
+
+df2 <- df %>% 
+  group_by(id) %>% 
+  mutate(x = cumsum(x), y = cumsum(y)) %>% 
+  ungroup()
+
+set.seed(180307)
+
+library(tidyverse)
+
+if(!require(circular)) {install.packages("circular"); library(circular)}
+
+nDot  <- 1L
+t     <- 15
+kappa <- 2
+spd <- 1
+
+angStarts <- circular(sample(0:360,nDot)) %>% conversion.circular()
+ang <- sapply(angStarts, function(x) {rvonmises(1, x, kappa, control.circular=list(units="radians"))})
+#ang <- rvonmises(nDot,circular(0), kappa, control.circular=list(units="radians"))
+y <- runif(nDot, min = -5, max = 5) + cos(ang)
+x <- runif(nDot, min = -5, max = 5) + sin(ang)
+
+df <- data_frame(id = 8, x, y, t = 1, ang)
+
+for(i in 1:t){
+  
+  
+  tmp <- rvonmises(nDot,circular(0), kappa, control.circular=list(units="radians"))
+  ang <- ang + tmp
+  y <- cos(ang)
+  x <- sin(ang)
+  tmp <- data_frame(id = 8,x, y, t=i, ang)
+  df <- rbind(df, tmp)  
+}
+
+
+df3 <- df %>% 
+  group_by(id) %>% 
+  mutate(x = cumsum(x), y = cumsum(y)) %>% 
+  ungroup()
+
+df2 <- df2 %>% rbind(df3)
+
+df2 %>% 
+  ggplot(aes(x,y, col = as.factor(id))) +
   geom_path() + 
   theme(aspect.ratio = 1) +
   xlim(-10,10)+
   ylim(-10,10)
-
 
 # another take ------------------------------------------------------------
 
