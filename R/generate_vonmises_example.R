@@ -44,16 +44,21 @@ traj_k64 <- trajx %>%
   mutate(type = if_else(object == "o1", "target", "distractor"))
   
   
-traj_k64 %>% 
-  filter(t > 10) %>% 
-  ggplot(aes(xcoord, ycoord, linetype = type,group = object, col = object)) + 
-  geom_path(size = 1.5) + 
+p <- traj_k64 %>% 
+  filter(t > 10) %>%
+  filter(object %in% c("o1","o2","o7","o4","o5")) %>% 
+  ggplot(aes(xcoord, ycoord, group = object)) + 
+  geom_path(size = 0.5) + 
   theme(aspect.ratio = 1) + 
   xlim(-15,15) +
   ylim(-15,15) +
-  scale_linetype_manual(values=c("dotted", "solid")) + 
-  geom_point(data = traj_k64 %>% filter(t==1), aes(xcoord, ycoord, fill = type), size = 4, shape = 1, show.legend=FALSE) +
-  geom_point(data = traj_k64 %>% filter(t==max(t)), aes(xcoord, ycoord, fill = type), size = 4, shape = 16, show.legend=FALSE) +
+  #scale_linetype_manual(values=c("solid", "solid")) + 
+  geom_point(data = traj_k64 %>% filter(t==max(t), object %in% c("o2","o7","o4","o5")), aes(xcoord, ycoord, fill = type), size = 4, shape = 16, show.legend=FALSE) +
+  geom_point(data = traj_k64 %>% filter(t==max(t), object %in% c("o1")), aes(xcoord, ycoord, fill = type), size = 4, shape = 1, show.legend=FALSE) +
+  #geom_point(data = traj_k64 %>% filter(t==max(t),object %in% c("o1","o2","o7","o4","o5")), aes(xcoord, ycoord, fill = type), size = 4, shape = 16, show.legend=FALSE) +
   guides(color = FALSE) +
   xlab("x [deg]") +
-  ylab("y [deg]")
+  ylab("y [deg]") +
+  ggtitle(expression("Target's "*kappa~"= 4; Distractors' "*kappa~"= 64"))
+
+ggsave(here::here("..", "plots", "scheme_trial_example.png"), p, width = 6, height = 6)
