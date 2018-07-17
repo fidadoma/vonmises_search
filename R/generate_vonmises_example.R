@@ -1,82 +1,59 @@
+rm(list = ls())
 
-# create data -------------------------------------------------------------
+source("tools.R")
+
+# von mises - circle -------------------------------------------------------------
 set.seed(180307)
 
 library(tidyverse)
+theme_set(theme_bw(16))
 
 if(!require(circular)) {install.packages("circular"); library(circular)}
 
-nDot  <- 100L
-t     <- 30
-kappa <- 16
-spd <- 1
+nDot  <- 1000L
+t     <- 15
 
-ang <- rvonmises(n, circular(0), kappa, control.circular=list(units="degrees"))
-
-y <- cos(ang)
-x <- sin(ang)
-
-df <- data_frame(id = 1:nDot, x, y, t = 1, ang)
-
-for(i in 1:t){
-  ang <- rvonmises(n,circular(0), kappa, control.circular=list(units="degrees"))
-
-  y <- cos(ang)
-  x <- sin(ang)
-  tmp <- data_frame(id = 1:nDot,x, y, t=i, ang)
-  df <- rbind(df, tmp)  
-}
-
-df2 <- df %>% 
-  group_by(id) %>% 
-  mutate(x = cumsum(x), y = cumsum(y)) %>% 
-  ungroup()
-
-df2 %>% 
-  filter(id < 6) %>% 
-  ggplot(aes(x,y, col = as.factor(id))) + 
-  geom_path() + 
-  theme(aspect.ratio = 1) +
-  xlim(-10,10)+
-  ylim(-10,10)
+p1 <- create_data_scheme_vonmises(nDot, t, kappa = 2) %>% plot_vonmises_scheme(expression("Highly variable movement ("*kappa~"=2)"))
+p2 <- create_data_scheme_vonmises(nDot, t, kappa = 16) %>% plot_vonmises_scheme(expression("Medium variable movement ("*kappa~")=16"))
+p3 <- create_data_scheme_vonmises(nDot, t, kappa = 64) %>% plot_vonmises_scheme(expression("Low variable movement ("*kappa~")=64"))
+ggsave(here::here("..", "plots", "scheme_vonmises_k2.png"), p1, width = 6, height = 6)
+ggsave(here::here("..", "plots", "scheme_vonmises_k16.png"), p2, width = 6, height = 6)
+ggsave(here::here("..", "plots", "scheme_vonmises_k64.png"), p3, width = 6, height = 6)
 
 
-# another take ------------------------------------------------------------
+# real data ---------------------------------------------------------------
 
-nDot <- 10000
+data_pth <- here::here("..","data", "exp1b", "trajectories")
 
-ang_k16 <- rvonmises(nDot, circular(0), 16, control.circular=list(units="degrees"))
-h <- hist(as.numeric(ang_k16),plot = F, breaks = 0:360)
-h$counts
-data <- data_frame(
-  id = 1:360,
-  ang_bin = h$counts
-)
+traj_k64_raw <- read.table(file.path(data_pth, "T001_4_rest64.csv")) %>% 
+  as_data_frame() %>% 
+  mutate(t=1:n())
 
-# Make the plot
-p <- ggplot(data, aes(x=as.factor(id), y=ang_bin)) +       # Note that id is a factor. If x is numeric, there is some space between the first bar
+trajx <- traj_k64_raw %>% 
+  select(V1,V3,V5,V7,V9,V11,V13,V15,t) %>% 
+  gather(key = "object", value = "xcoord", -t) %>% 
+  mutate(object = recode(object, V1 = "o1", V3 = "o2", V5 = "o3", V7 = "o4", V9 = "o5", V11 = "o6", V13 = "o7", V15 = "o8"))
+
+trajy <- traj_k64_raw %>% 
+  select(V2,V4,V6,V8,V10,V12,V14,V16,t) %>% 
+  gather(key = "object", value = "ycoord", -t) %>% 
+  mutate(object = recode(object, V2 = "o1", V4 = "o2", V6 = "o3", V8 = "o4", V10 = "o5", V12 = "o6", V14 = "o7", V16 = "o8"))
+
+traj_k64 <- trajx %>% 
+  left_join(trajy, by = c("t", "object")) %>% 
+  mutate(type = if_else(object == "o1", "target", "distractor"))
   
-  # This add the bars with a blue color
-  geom_bar(stat = "identity", fill = "black", width = 1) +
-coord_polar(start = 0) + 
-  scale_x_discrete(breaks = seq(0, 360), labels = seq(0, 360)) +
-  theme(
-    axis.text = element_blank()
-    
-  )
-  # Limits of the plot = very important. The negative value controls the size of the inner circle, the positive one is useful to add size over each bar
-  ylim(-100,120) +
   
-  # Custom the theme: no axis title and no cartesian grid
-  theme_minimal() +
-  theme(
-    axis.text = element_blank(),
-    axis.title = element_blank(),
-    panel.grid = element_blank(),
-    plot.margin = unit(rep(-2,4), "cm")     # This remove unnecessary margin around plot
-  ) +
-  
-  # This makes the coordinate polar instead of cartesian.
-  coord_polar(start = 0)
-p
-
+traj_k64 %>% 
+  filter(t > 10) %>% 
+  ggplot(aes(xcoord, ycoord, linetype = type,group = object, col = object)) + 
+  geom_path(size = 1.5) + 
+  theme(aspect.ratio = 1) + 
+  xlim(-15,15) +
+  ylim(-15,15) +
+  scale_linetype_manual(values=c("dotted", "solid")) + 
+  geom_point(data = traj_k64 %>% filter(t==1), aes(xcoord, ycoord, fill = type), size = 4, shape = 1, show.legend=FALSE) +
+  geom_point(data = traj_k64 %>% filter(t==max(t)), aes(xcoord, ycoord, fill = type), size = 4, shape = 16, show.legend=FALSE) +
+  guides(color = FALSE) +
+  xlab("x [deg]") +
+  ylab("y [deg]")
