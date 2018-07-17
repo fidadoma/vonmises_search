@@ -14,8 +14,8 @@ nDot  <- 1000L
 t     <- 15
 
 p1 <- create_data_scheme_vonmises(nDot, t, kappa = 2) %>% plot_vonmises_scheme(expression("Highly variable movement ("*kappa~"=2)"))
-p2 <- create_data_scheme_vonmises(nDot, t, kappa = 16) %>% plot_vonmises_scheme(expression("Medium variable movement ("*kappa~")=16"))
-p3 <- create_data_scheme_vonmises(nDot, t, kappa = 64) %>% plot_vonmises_scheme(expression("Low variable movement ("*kappa~")=64"))
+p2 <- create_data_scheme_vonmises(nDot, t, kappa = 16) %>% plot_vonmises_scheme(expression("Medium variable movement ("*kappa~"=16)"))
+p3 <- create_data_scheme_vonmises(nDot, t, kappa = 64) %>% plot_vonmises_scheme(expression("Low variable movement ("*kappa~"=64)"))
 ggsave(here::here("..", "plots", "scheme_vonmises_k2.png"), p1, width = 6, height = 6)
 ggsave(here::here("..", "plots", "scheme_vonmises_k16.png"), p2, width = 6, height = 6)
 ggsave(here::here("..", "plots", "scheme_vonmises_k64.png"), p3, width = 6, height = 6)
