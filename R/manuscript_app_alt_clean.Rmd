@@ -1,0 +1,386 @@
+---
+title: "manuscript - APP"
+author: "Filip Dechterenko"
+date: '`r format(Sys.time(), "%d %B, %Y")`'
+output: html_document
+---
+
+## Load libraries
+
+```{r load libraries, warning=F, message=F, echo=FALSE}
+
+if (!require(tidyverse)) {install.packages("tidyverse"); library(tidyverse)}
+if (!require(ez)) {install.packages("ez"); library(ez)}
+if (!require(psyphy)) {install.packages("psyphy"); library(psyphy)}
+
+if (!require(here)) {install.packages("here")}
+
+library(lme4)
+library(lmerTest)
+
+theme_set(theme_bw(16))
+source("tools.R")
+```
+
+```{r echo=FALSE}
+# Exp 1b
+df_exp1b <- 
+  readRDS(
+    here::here("..", "data", "exp1b", "responses", "responses_150622.rds")) %>% 
+  filter(block != 0) %>% as_tibble(.) %>% 
+  rename(targetk = type) %>% mutate(id = factor(subject)) %>% 
+  mutate(contrast_abs = abs(log2(targetk / restk)), 
+         target_straight = (targetk > restk))
+participants_exp1b <- 
+  read.csv(file.path(data_pth, "exp1b", "participants_150526.csv"), fileEncoding = "UTF8")
+
+# Exp 2b
+df_exp2b <- 
+  readRDS(
+    here::here("..", "data", "exp2b", "responses", "responses_171023.rds")) %>% 
+ filter(block != 0) %>% as_tibble(.) %>% 
+  rename(targetk = type) %>% mutate(id = factor(subject)) %>% 
+  mutate(contrast_abs = abs(log2(targetk / restk)), 
+         target_faster = (targetk > restk))
+participants_exp2b <- 
+  read.csv(here::here("..", "data", "exp2b", "participants_171023.csv"))
+```
+
+
+# Experiment 1b
+
+```{r echo=F}
+# accuracy summarised
+accu_summary <- df_exp1b %>% 
+  mutate(contrast_abs_f = as.character(contrast_abs)) %>% 
+  group_by(id, contrast_abs, contrast_abs_f, target_straight) %>% 
+  dplyr::summarise(accu = mean(accuracy), n = n()) 
+accu_summary_wo_0 <- accu_summary %>% filter(contrast_abs > 0)
+
+# duplicated values for contrast 0
+accu_summaryx <- bind_rows(
+  accu_summary,
+  accu_summary %>% 
+    filter(contrast_abs == 0, target_straight == F) %>% 
+    mutate(target_straight = T)
+)
+
+# raw data with duplicated values for contrast 0
+df_exp1bx <- bind_rows(
+  df_exp1b,
+  df_exp1b %>% 
+    filter(contrast_abs == 0, target_straight == F) %>% 
+    mutate(target_straight = T)
+)
+# yes no for psychophysics
+d1b <- df_exp1b %>% 
+  group_by(id, target_straight, contrast_abs) %>% 
+  summarise(yes = sum(accuracy), no = n() - yes, accuracy = mean(accuracy))
+d1bx <- bind_rows(
+  d1b,
+  d1b %>% 
+    filter(contrast_abs == 0) %>% ungroup() %>% mutate(target_straight = T)
+)
+```
+
+```{r Charts1b}
+accu_summary %>% 
+  ggplot(aes(x = contrast_abs, y = accu, colour = target_straight)) + 
+  geom_jitter() 
+accu_summary %>% 
+  ggplot(
+    aes(x = contrast_abs, y = accu, 
+        group = target_straight, colour = target_straight)) + 
+  stat_summary(fun.data = "mean_cl_boot", alpha = .5)
+```
+
+## Individual data
+```{r}
+d1bx %>% ggplot(aes(x = contrast_abs, y = accuracy, colour = target_straight)) +
+  geom_point(alpha = .5) + facet_wrap(~id)
+```
+
+## ANOVA
+
+### Linear 
+```{r}
+# linear
+ezANOVA(accu_summaryx,
+        accu, id, within = .(contrast_abs, target_straight))
+```
+
+### As factor
+```{r}
+# as factor and without contrast==0
+ezANOVA(accu_summary_wo_0,
+        accu, id, within = .(contrast_abs_f, target_straight))
+```
+
+## Mixed models
+
+### Analysis as factors
+
+```{r}
+# as factor
+m0 <- lmer(accu ~ (1|id), 
+           data = accu_summary_wo_0)
+summary(m0)
+m1 <- lmer(accu ~ contrast_abs_f + (1|id), 
+           data = accu_summary_wo_0)
+summary(m1)
+m2 <- lmer(accu ~ contrast_abs_f + target_straight + (1|id), 
+           data = accu_summary_wo_0)
+summary(m2)
+m3 <- lmer(accu ~ contrast_abs_f * target_straight + (1|id), 
+           data = accu_summary_wo_0)
+summary(m3)
+m4 <- lmer(accu ~ contrast_abs_f + contrast_abs_f:target_straight + (1|id), 
+           data = accu_summary_wo_0)
+```
+
+### Linear
+
+```{r}
+m0 <- lmer(accu ~ (contrast_abs|id), data = accu_summaryx)
+summary(m0)
+m1 <- lmer(accu ~ contrast_abs + (contrast_abs|id), data = accu_summaryx)
+summary(m1)
+m2 <- lmer(accu ~ contrast_abs + target_straight + (contrast_abs|id), data = accu_summaryx)
+summary(m2)
+m3 <- lmer(accu ~ contrast_abs * target_straight + (1|id), data = accu_summaryx)
+summary(m3)
+m4 <- lmer(accu ~ contrast_abs + contrast_abs:target_straight + (1|id), data = accu_summaryx)
+summary(m4)
+
+```
+
+### Logistic
+```{r}
+m0 <- glmer(accuracy ~ (1|id), 
+            data = df_exp1bx, family = binomial())
+summary(m0)
+m1 <- glmer(accuracy ~ contrast_abs + (1|id), 
+            data = df_exp1bx, family = binomial())
+summary(m1)
+m2 <- glmer(accuracy ~ contrast_abs + target_straight + (1|id), 
+            data = df_exp1bx, family = binomial())
+summary(m2)
+m3 <- glmer(accuracy ~ contrast_abs * target_straight + (1|id), 
+            data = df_exp1bx, family = binomial())
+summary(m3)
+
+```
+
+### Psychophysics
+
+```{r}
+df.pf <- df_exp1bx %>% 
+  group_by(contrast_abs, target_straight) %>% 
+  summarise(yes = sum(accuracy), no = n() - sum(accuracy), 
+            accuracy = 1 - mean(accuracy))
+
+pf_ts <- psyfun.2asym(cbind(yes, no) ~ contrast_abs, 
+                      data = df.pf %>% filter(target_straight), 
+                      link = weib.2asym, init.g = 0.125, init.lam = 0.05 )
+pf_tb <- psyfun.2asym(cbind(yes, no) ~ contrast_abs, 
+                      data = df.pf %>% filter(!target_straight), 
+                      link = weib.2asym, init.g = 0.125, init.lam = 0.05 )
+
+x <- seq(0, 6,0.01)
+ys <- predict(pf_ts, data.frame(contrast_abs = x), type = "response")
+yb <- predict(pf_tb, data.frame(contrast_abs = x), type = "response")
+
+dfmodel <- data.frame(x, y = c(ys, yb), 
+                      target_straight = rep(c(T,F), each = length(x)))
+
+p <- ggplot(data = dfmodel, aes(x = x, y = y, colour = target_straight)) + 
+  geom_line(size = 1.5) + 
+  stat_summary(data = df.pf, aes(x = contrast_abs, y = accuracy), 
+               fun.data = "mean_cl_boot", size = 1) +
+  NULL
+p
+
+summary(pf_ts)
+summary(pf_tb)
+```
+
+
+# Experiment 2b
+
+```{r echo=F}
+# accuracy summarised
+accu_summary <- df_exp2b %>% 
+  mutate(contrast_abs_f = as.character(contrast_abs)) %>% 
+  group_by(id, contrast_abs, contrast_abs_f, target_faster) %>% 
+  dplyr::summarise(accu = mean(accuracy), n = n()) 
+accu_summary_wo_0 <- accu_summary %>% filter(contrast_abs > 0)
+
+# duplicated values for contrast 0
+accu_summaryx <- bind_rows(
+  accu_summary,
+  accu_summary %>% 
+    filter(contrast_abs == 0, target_faster == F) %>% 
+    mutate(target_faster = T)
+)
+
+# raw data with duplicated values for contrast 0
+df_exp2bx <- bind_rows(
+  df_exp2b,
+  df_exp2b %>% 
+    filter(contrast_abs == 0, target_faster == F) %>% 
+    mutate(target_faster = T)
+)
+# yes no for psychophysics
+d2b <- df_exp2b %>% 
+  group_by(id, target_faster, contrast_abs) %>% 
+  summarise(yes = sum(accuracy), no = n() - yes, accuracy = mean(accuracy))
+d2bx <- bind_rows(
+  d2b,
+  d2b %>% 
+    filter(contrast_abs == 0) %>% ungroup() %>% mutate(target_faster = T)
+)
+```
+
+```{r Charts2b}
+accu_summary %>% 
+  ggplot(aes(x = contrast_abs, y = accu, colour = target_faster)) + 
+  geom_jitter() 
+accu_summary %>% 
+  ggplot(
+    aes(x = contrast_abs, y = accu, 
+        group = target_faster, colour = target_faster)) + 
+  stat_summary(fun.data = "mean_cl_boot", alpha = .5)
+```
+
+## Individual data
+```{r}
+d2bx %>% ggplot(aes(x = contrast_abs, y = accuracy, colour = target_faster)) +
+  geom_point(alpha = .5) + facet_wrap(~id)
+weird_performance <- c(1, 5, 14)
+```
+
+## ANOVA
+
+### Linear 
+```{r}
+# linear
+ezANOVA(accu_summaryx,
+        accu, id, within = .(contrast_abs, target_faster))
+```
+
+### As factor
+```{r}
+# as factor and without contrast==0
+ezANOVA(accu_summary_wo_0,
+        accu, id, within = .(contrast_abs_f, target_faster))
+```
+
+### Test without weird performance
+```{r}
+# linear
+ezANOVA(accu_summaryx %>% filter(!id %in% weird_performance),
+        accu, id, within = .(contrast_abs, target_faster))
+# as factor and without contrast==0
+ezANOVA(accu_summary_wo_0 %>% filter(!id %in% weird_performance),
+        accu, id, within = .(contrast_abs_f, target_faster))
+```
+
+## Mixed models
+
+### Analysis as factors
+
+```{r}
+# as factor
+m0 <- lmer(accu ~ (1|id), 
+           data = accu_summary_wo_0)
+summary(m0)
+m1 <- lmer(accu ~ contrast_abs_f + (1|id), 
+           data = accu_summary_wo_0)
+summary(m1)
+m2 <- lmer(accu ~ contrast_abs_f + target_faster + (1|id), 
+           data = accu_summary_wo_0)
+summary(m2)
+m3 <- lmer(accu ~ contrast_abs_f * target_faster + (1|id), 
+           data = accu_summary_wo_0)
+summary(m3)
+m4 <- lmer(accu ~ contrast_abs_f + contrast_abs_f:target_faster + (1|id), 
+           data = accu_summary_wo_0)
+```
+
+### Linear
+
+```{r}
+m0 <- lmer(accu ~ (contrast_abs|id), data = accu_summaryx)
+summary(m0)
+m1 <- lmer(accu ~ contrast_abs + (contrast_abs|id), data = accu_summaryx)
+summary(m1)
+m2 <- lmer(accu ~ contrast_abs + target_faster + (contrast_abs|id), data = accu_summaryx)
+summary(m2)
+m3 <- lmer(accu ~ contrast_abs * target_faster + (1|id), data = accu_summaryx)
+summary(m3)
+m4 <- lmer(accu ~ contrast_abs + contrast_abs:target_faster + (1|id), data = accu_summaryx)
+summary(m4)
+
+```
+
+### Logistic
+```{r}
+m0 <- glmer(accuracy ~ (1|id), 
+            data = df_exp2bx, family = binomial())
+summary(m0)
+m1 <- glmer(accuracy ~ contrast_abs + (1|id), 
+            data = df_exp2bx, family = binomial())
+summary(m1)
+m2 <- glmer(accuracy ~ contrast_abs + target_faster + (1|id), 
+            data = df_exp2bx, family = binomial())
+summary(m2)
+m3 <- glmer(accuracy ~ contrast_abs * target_faster + (1|id), 
+            data = df_exp2bx, family = binomial())
+summary(m3)
+```
+
+### Test w/o weird performance in logistic regression
+```{r}
+m0 <- glmer(accuracy ~ (1|id), 
+            data = df_exp2bx %>% filter(!id %in% weird_performance), family = binomial())
+summary(m0)
+m3 <- glmer(accuracy ~ contrast_abs * target_faster + (1|id), 
+            data = df_exp2bx %>% filter(!id %in% weird_performance), family = binomial())
+summary(m3)
+anova(m3,m0)
+```
+
+
+### Psychophysics
+
+```{r}
+df.pf <- df_exp2bx %>% 
+  group_by(contrast_abs, target_faster) %>% 
+  summarise(yes = sum(accuracy), no = n() - sum(accuracy), 
+            accuracy = 1 - mean(accuracy))
+
+pf_ts <- psyfun.2asym(cbind(yes, no) ~ contrast_abs, 
+                      data = df.pf %>% filter(target_faster), 
+                      link = weib.2asym, init.g = 0.125, init.lam = 0.05)
+pf_tb <- psyfun.2asym(cbind(yes, no) ~ contrast_abs, 
+                      data = df.pf %>% filter(!target_faster), 
+                      link = weib.2asym, init.g = 0.125, init.lam = 0.05)
+
+x <- seq(0, 6,0.01)
+ys <- predict(pf_ts, data.frame(contrast_abs = x), type = "response")
+yb <- predict(pf_tb, data.frame(contrast_abs = x), type = "response")
+
+dfmodel <- data.frame(x, y = c(ys, yb), 
+                      target_faster = rep(c(T,F), each = length(x)))
+
+p <- ggplot(data = dfmodel, aes(x = x, y = y, colour = target_faster)) + 
+  geom_line(size = 1.5) + 
+  stat_summary(data = df.pf, aes(x = contrast_abs, y = accuracy), 
+               fun.data = "mean_cl_boot", size = 1) +
+  NULL
+p
+
+summary(pf_ts)
+summary(pf_tb)
+```
+
