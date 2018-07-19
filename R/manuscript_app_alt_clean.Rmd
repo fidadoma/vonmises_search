@@ -20,13 +20,15 @@ library(lmerTest)
 
 theme_set(theme_bw(16))
 source("tools.R")
+
+data_pth <- here::here("..", "data")
 ```
 
 ```{r echo=FALSE}
 # Exp 1b
 df_exp1b <- 
   readRDS(
-    here::here("..", "data", "exp1b", "responses", "responses_150622.rds")) %>% 
+    file.path(data_pth, "exp1b", "responses", "responses_150622.rds")) %>% 
   filter(block != 0) %>% as_tibble(.) %>% 
   rename(targetk = type) %>% mutate(id = factor(subject)) %>% 
   mutate(contrast_abs = abs(log2(targetk / restk)), 
@@ -37,13 +39,13 @@ participants_exp1b <-
 # Exp 2b
 df_exp2b <- 
   readRDS(
-    here::here("..", "data", "exp2b", "responses", "responses_171023.rds")) %>% 
+    file.path(data_pth, "exp2b", "responses", "responses_171023.rds")) %>% 
  filter(block != 0) %>% as_tibble(.) %>% 
   rename(targetk = type) %>% mutate(id = factor(subject)) %>% 
   mutate(contrast_abs = abs(log2(targetk / restk)), 
          target_faster = (targetk > restk))
 participants_exp2b <- 
-  read.csv(here::here("..", "data", "exp2b", "participants_171023.csv"))
+  read.csv(file.path(data_pth, "exp2b", "participants_171023.csv"))
 ```
 
 
@@ -83,8 +85,31 @@ d1bx <- bind_rows(
 )
 ```
 
+## Individual data
+```{r}
+d1bx %>% ggplot(aes(x = contrast_abs, y = accuracy, colour = target_straight)) +
+  geom_point(alpha = .5) + facet_wrap(~id)
+```
+
+
 ```{r Charts1b}
+#accu_summary %>% 
+#  ggplot(aes(x = contrast_abs, y = accu, colour = target_straight)) + 
+#  geom_jitter() 
+accu_summaryx %>% 
+  ggplot(
+    aes(x = contrast_abs, y = accu, 
+        group = target_straight, shape = target_straight, linetype = target_straight)) + 
+  stat_summary(fun.data = "mean_cl_boot", alpha = .5) +
+  stat_summary(fun.y = "mean", alpha = .5, geom = "line") + 
+  
+  theme(aspect.ratio = 1) + 
+  xlab("c") + ylab("Accuracy")
+```
+
+```{r Charts1b without one participant}
 accu_summary %>% 
+  filter(id!= 13)
   ggplot(aes(x = contrast_abs, y = accu, colour = target_straight)) + 
   geom_jitter() 
 accu_summary %>% 
@@ -92,12 +117,6 @@ accu_summary %>%
     aes(x = contrast_abs, y = accu, 
         group = target_straight, colour = target_straight)) + 
   stat_summary(fun.data = "mean_cl_boot", alpha = .5)
-```
-
-## Individual data
-```{r}
-d1bx %>% ggplot(aes(x = contrast_abs, y = accuracy, colour = target_straight)) +
-  geom_point(alpha = .5) + facet_wrap(~id)
 ```
 
 ## ANOVA
@@ -113,7 +132,40 @@ ezANOVA(accu_summaryx,
 ```{r}
 # as factor and without contrast==0
 ezANOVA(accu_summary_wo_0,
-        accu, id, within = .(contrast_abs_f, target_straight))
+        accu, id, within = .(contrast_abs_f, target_straight),detailed = T)$ANOVA %>% 
+  mutate(F = round(F,2), p = round(p,3),ges = round(ges,2),
+         partial_eta = (SSn/(SSn+SSd)) %>% round(2))
+
+```
+
+### Post hoc tests
+
+```{r}
+(accu_summary_wo_0 %>% 
+  filter(contrast_abs_f == 1) %>% 
+ezANOVA(accu, id, within = .(target_straight),detailed = T))$ANOVA %>% 
+  mutate(F = round(F,2), p = round(p,3),ges = round(ges,2),
+         partial_eta = (SSn/(SSn+SSd)) %>% round(2))
+
+(accu_summary_wo_0 %>% 
+  filter(contrast_abs_f == 2) %>% 
+ezANOVA(accu, id, within = .(target_straight),detailed = T))$ANOVA %>% 
+  mutate(F = round(F,2), p = round(p,3),ges = round(ges,2),
+         partial_eta = (SSn/(SSn+SSd)) %>% round(2))
+
+
+(accu_summary_wo_0 %>% 
+  filter(contrast_abs_f == 3) %>% 
+ezANOVA(accu, id, within = .(target_straight),detailed = T))$ANOVA %>% 
+  mutate(F = round(F,2), p = round(p,3),ges = round(ges,2),
+         partial_eta = (SSn/(SSn+SSd)) %>% round(2))
+
+(accu_summary_wo_0 %>% 
+  filter(contrast_abs_f == 4) %>% 
+ezANOVA(accu, id, within = .(target_straight),detailed = T))$ANOVA %>% 
+  mutate(F = round(F,2), p = round(p,3),ges = round(ges,2),
+         partial_eta = (SSn/(SSn+SSd)) %>% round(2))
+
 ```
 
 ## Mixed models
@@ -241,6 +293,13 @@ d2bx <- bind_rows(
 )
 ```
 
+## Individual data
+```{r}
+d2bx %>% ggplot(aes(x = contrast_abs, y = accuracy, colour = target_faster)) +
+  geom_point(alpha = .5) + facet_wrap(~id)
+weird_performance <- c(1, 5, 14)
+```
+
 ```{r Charts2b}
 accu_summary %>% 
   ggplot(aes(x = contrast_abs, y = accu, colour = target_faster)) + 
@@ -252,12 +311,17 @@ accu_summary %>%
   stat_summary(fun.data = "mean_cl_boot", alpha = .5)
 ```
 
-## Individual data
-```{r}
-d2bx %>% ggplot(aes(x = contrast_abs, y = accuracy, colour = target_faster)) +
-  geom_point(alpha = .5) + facet_wrap(~id)
-weird_performance <- c(1, 5, 14)
+
+```{r Charts2b without weird}
+accu_summary %>% 
+  filter(!id %in% weird_performance) %>% 
+  ggplot(
+    aes(x = contrast_abs, y = accu, 
+        group = target_faster, colour = target_faster)) + 
+  stat_summary(fun.data = "mean_cl_boot", alpha = .5)
 ```
+
+
 
 ## ANOVA
 
