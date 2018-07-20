@@ -48,6 +48,21 @@ participants_exp2b <-
   read.csv(file.path(data_pth, "exp2b", "participants_171023.csv"))
 ```
 
+```{r kl distance}
+
+ks <- c(2,4,8,16,64)
+n <- length(ks)
+
+m <- matrix(rep(0,n*n), ncol = n)
+source("tools.R")
+for (i in 1:length(ks)) {
+  for (j in i:length(ks)) {
+    m[i,j] <- kl_distance(ks[i],ks[j])    
+  } 
+}
+rownames(m) <- colnames(m) <- ks
+as_data_frame(m) %>% gather(value = kl_distance) %>% distinct()
+```
 
 # Experiment 1b
 
