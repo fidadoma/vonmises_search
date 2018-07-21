@@ -188,8 +188,8 @@ plot_vonmises_scheme <- function(df, ggtit) {
 
 kl_distance <- function(k1, k2) {
   x <- seq(from = -pi, to = pi, length.out = 1000)
-  p_k1 <- dvonmises(x,mu = circular(0), kappa = k1)
-  p_k2 <- dvonmises(x,mu = circular(0), kappa = k2)
+  p_k1 <- circular::dvonmises(x,mu = circular::circular(0), kappa = k1)
+  p_k2 <- circular::dvonmises(x,mu = circular::circular(0), kappa = k2)
   m <- spatialEco::kl.divergence(cbind(p_k1,p_k2))
   (m[1,2]+m[2,1]) / 2
 }

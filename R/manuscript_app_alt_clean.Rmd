@@ -32,7 +32,9 @@ df_exp1b <-
   filter(block != 0) %>% as_tibble(.) %>% 
   rename(targetk = type) %>% mutate(id = factor(subject)) %>% 
   mutate(contrast_abs = abs(log2(targetk / restk)), 
-         target_straight = (targetk > restk))
+         target_straight = (targetk > restk),
+         ratio = (besselI(targetk,0) * exp(targetk)) / (besselI(restk,0) * exp(restk)),
+         ratio_abs = abs(log((besselI(targetk,0) * exp(targetk))) / (besselI(restk,0) * exp(restk))))
 participants_exp1b <- 
   read.csv(file.path(data_pth, "exp1b", "participants_150526.csv"), fileEncoding = "UTF8")
 
@@ -61,7 +63,18 @@ for (i in 1:length(ks)) {
   } 
 }
 rownames(m) <- colnames(m) <- ks
-as_data_frame(m) %>% gather(value = kl_distance) %>% distinct()
+
+df_kl <- as_data_frame(m) %>%
+  mutate(k1 = rownames(m)) %>% 
+  gather(k2, value = kl_distance,-k1) %>% 
+  mutate(k1 = as.numeric(k1), k2 = as.numeric(k2)) %>% 
+  filter(k2>=k1) %>% 
+  distinct()
+
+df_kl <- df_kl %>% bind_rows(df_kl %>% mutate(tmp =k1, k1=k2,k2=tmp) %>% select(-tmp))
+
+df_exp1b <- df_exp1b %>% 
+  left_join(df_kl, by = c("targetk"="k1","restk"="k2"))
 ```
 
 # Experiment 1b
@@ -70,8 +83,9 @@ as_data_frame(m) %>% gather(value = kl_distance) %>% distinct()
 # accuracy summarised
 accu_summary <- df_exp1b %>% 
   mutate(contrast_abs_f = as.character(contrast_abs)) %>% 
-  group_by(id, contrast_abs, contrast_abs_f, target_straight) %>% 
-  dplyr::summarise(accu = mean(accuracy), n = n()) 
+  group_by(id, contrast_abs, contrast_abs_f, target_straight, kl_distance,ratio,ratio_abs) %>% 
+  dplyr::summarise(accu = mean(accuracy), n = n()) %>% 
+  ungroup()
 accu_summary_wo_0 <- accu_summary %>% filter(contrast_abs > 0)
 
 # duplicated values for contrast 0
@@ -120,6 +134,51 @@ accu_summaryx %>%
   
   theme(aspect.ratio = 1) + 
   xlab("c") + ylab("Accuracy")
+```
+
+```{r Charts1b kl distance}
+#accu_summary %>% 
+#  ggplot(aes(x = contrast_abs, y = accu, colour = target_straight)) + 
+#  geom_jitter() 
+accu_summaryx %>% 
+  ggplot(
+    aes(x = kl_distance, y = accu, 
+        group = target_straight, shape = target_straight, linetype = target_straight)) + 
+  stat_summary(fun.data = "mean_cl_boot", alpha = .5) +
+  stat_summary(fun.y = "mean", alpha = .5, geom = "line") + 
+  
+  theme(aspect.ratio = 1) + 
+  xlab("kl distance") + ylab("Accuracy")
+```
+
+```{r Charts1b ratio}
+#accu_summary %>% 
+#  ggplot(aes(x = contrast_abs, y = accu, colour = target_straight)) + 
+#  geom_jitter() 
+accu_summaryx %>% 
+  ggplot(
+    aes(x = ratio, y = accu, 
+        group = target_straight, shape = target_straight, linetype = target_straight)) + 
+  stat_summary(fun.data = "mean_cl_boot", alpha = .5) +
+  stat_summary(fun.y = "mean", alpha = .5, geom = "line") + 
+  
+  theme(aspect.ratio = 1) + 
+  xlab("kl distance") + ylab("Accuracy") +scale_x_log10()
+```
+
+```{r Charts1b ratio abs}
+#accu_summary %>% 
+#  ggplot(aes(x = contrast_abs, y = accu, colour = target_straight)) + 
+#  geom_jitter() 
+accu_summaryx %>% 
+  ggplot(
+    aes(x = ratio_abs, y = accu, 
+        group = target_straight, shape = target_straight, linetype = target_straight)) + 
+  stat_summary(fun.data = "mean_cl_boot", alpha = .5) +
+  stat_summary(fun.y = "mean", alpha = .5, geom = "line") + 
+  
+  theme(aspect.ratio = 1) + 
+  xlab("kl distance") + ylab("Accuracy") +scale_x_continuous(trans ="log")
 ```
 
 ```{r Charts1b without one participant}
