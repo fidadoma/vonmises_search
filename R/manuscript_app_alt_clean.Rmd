@@ -33,8 +33,10 @@ df_exp1b <-
   rename(targetk = type) %>% mutate(id = factor(subject)) %>% 
   mutate(contrast_abs = abs(log2(targetk / restk)), 
          target_straight = (targetk > restk),
-         ratio = (besselI(targetk,0) * exp(targetk)) / (besselI(restk,0) * exp(restk)),
-         ratio_abs = abs(log((besselI(targetk,0) * exp(targetk))) / (besselI(restk,0) * exp(restk))))
+         ratio = (besselI(restk,0) * exp(targetk)) / (besselI(targetk,0) * exp(restk)),
+         ratio_abs = abs(log((besselI(restk,0) * exp(targetk))) / (besselI(targetk,0) * exp(restk))),
+         ratio_abs = abs(log(
+           (besselI(restk,0) * exp(targetk))) / (besselI(targetk,0) * exp(restk))))
 participants_exp1b <- 
   read.csv(file.path(data_pth, "exp1b", "participants_150526.csv"), fileEncoding = "UTF8")
 
@@ -178,7 +180,7 @@ accu_summaryx %>%
   stat_summary(fun.y = "mean", alpha = .5, geom = "line") + 
   
   theme(aspect.ratio = 1) + 
-  xlab("kl distance") + ylab("Accuracy") +scale_x_continuous(trans ="log")
+  xlab("ratio") + ylab("Accuracy") +scale_x_continuous(trans ="log")
 ```
 
 ```{r Charts1b without one participant}
