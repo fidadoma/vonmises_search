@@ -165,7 +165,7 @@ accu_summaryx %>%
   stat_summary(fun.y = "mean", alpha = .5, geom = "line") + 
   
   theme(aspect.ratio = 1) + 
-  xlab("kl distance") + ylab("Accuracy") +scale_x_log10()
+  xlab("PDF ratio") + ylab("Accuracy") +scale_x_log10()
 ```
 
 ```{r Charts1b ratio abs}
