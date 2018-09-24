@@ -95,27 +95,6 @@ ggsave(file.path(plot_pth, "Figure2_brownian.eps"), p1, width = 6, height = 6)
 ggsave(file.path(plot_pth, "Figure2_ballistic.eps"), p2, width = 6, height = 6)
 ```
 
-```{r exp1a - fitting weibull}
-
-df.pf <- df_exp1a %>% 
-  filter(restk2 == "Ballistic-like", type %in% c(2,4,8,16,32))
-
-df.pf2 <- df.pf %>% 
-  group_by(type) %>% 
-  summarise(yes = sum(accuracy), no = n() - sum(accuracy), accuracy = 1 - mean(accuracy))
-
-pf <- psyfun.2asym(cbind(yes, no) ~ type, data = df.pf2, link = weib.2asym, init.g = 0.125, init.lam = 0.05 )   
-
-x <- seq(-2,32,0.01)
-y <- predict(pf, data.frame(type = x), type="response")
-
-dfmodel <- data.frame(x, y)
-
-p <- ggplot(data = dfmodel, aes(x = x, y = y)) + geom_line(color="red", size =1.5) + stat_summary(data = df.pf, aes(x = type, y=accuracy),fun.data = "mean_cl_boot", size = 1) + scale_x_continuous(expression("Target's"~kappa), breaks = df.pf2$type) + ylab("Accuracy")
-p
-
-```
-
 ## Overall differences
 
 ```{r exp 1a - overall differences, warning=F, message = F}
