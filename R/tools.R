@@ -78,9 +78,10 @@ plot_fig2 <- function(restk_var, ggtit) {
     theme(aspect.ratio = 1)  + xlab(expression("Target's"~kappa)) + 
     ylab("Accuracy") + 
     ylim(0,1)+
-    scale_x_continuous(expression("Target's"~kappa~" (log scale)"),breaks = c(1,8,16,32,64,128),labels = c("1","8","16","32","64","128"), trans = "log2") + 
+    scale_x_continuous(expression("Target's"~kappa~" (log scale)"),breaks = c(1,2,4,8,16,32,64,128),labels = c("1","2","4","8","16","32","64","128"), trans = "log2") + 
     geom_vline(xintercept = restk_var, linetype = 2) +
-    ggtitle(ggtit)
+    ggtitle(ggtit) +
+    theme(plot.title = element_text(hjust = 0.5))
 }
 
 plot_fig3 <- function(restk_var, show_legend = F) {
@@ -98,7 +99,8 @@ plot_fig3 <- function(restk_var, show_legend = F) {
     scale_x_continuous(expression("Variable"~kappa~" (log scale)"),breaks = c(2,4,8,16,64),labels = c("2","4","8","16","64"), trans = "log2") + 
     scale_linetype_manual(values = c(2,1)) +
     geom_vline(xintercept = restk_var, linetype = 2) +
-    ggtitle(bquote("Fixed "~kappa~"= "~.(restk_var)))
+    ggtitle(bquote("Fixed "~kappa~"= "~.(restk_var))) +
+    theme(plot.title = element_text(hjust = 0.5))
   
   if (show_legend) {
     p 
