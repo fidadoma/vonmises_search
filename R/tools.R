@@ -183,7 +183,8 @@ plot_vonmises_scheme <- function(df, ggtit) {
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
     xlab("x [deg]") + 
     ylab("y [deg]") + 
-    ggtitle(ggtit)
+    ggtitle(ggtit) + 
+    theme(plot.title = element_text(hjust = 0.5))
 }
 
 kl_distance <- function(k1, k2) {
