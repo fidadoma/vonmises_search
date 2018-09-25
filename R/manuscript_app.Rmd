@@ -185,27 +185,13 @@ c(mean(participants_exp1b$age), sd(participants_exp1b$age)) %>% round(2)
 ## Figure 3a
 
 ```{r Figure 3a}
-df_exp1b %>% 
-  ggplot(aes(x = targetk, y = accuracy) + 
-    facet_grid(~restk, 
-               labeller = labeller(
-        xfacet = c(`2` = expression("Target's"~kappa~"=2"), 
-                   `4` = expression("Target's"~kappa~"=4"),
-                   `8` = expression("Target's"~kappa~"=8"),
-                   `16` = expression("Target's"~kappa~"=16"),
-                   `64` = expression("Target's"~kappa~"=64"))
-        
-    )) +
-    stat_summary(fun.data = "mean_cl_boot") + 
-    stat_summary(fun.y = mean, geom = "line") + 
-    geom_hline(yintercept=0.125) + 
-    theme(aspect.ratio = 1)  + xlab(expression("Target's"~kappa)) + 
-    ylab("Accuracy") + 
-    ylim(0,1)+
-    scale_x_continuous(expression("Target's"~kappa~" (log scale)"),breaks = c(1,2,4,8,16,32,64,128),labels = c("1","2","4","8","16","32","64","128"), trans = "log2") + 
-    geom_vline(xintercept = restk_var, linetype = 2) +
-    ggtitle(ggtit) +
-    theme(plot.title = element_text(hjust = 0.5))
+
+p <- plot_fig3b()  
+p
+
+ggsave(file.path(plot_pth, "Figure3b.png"), p, width = 12, height = 6)
+
+
 ```
 
 ## Figure 3b
