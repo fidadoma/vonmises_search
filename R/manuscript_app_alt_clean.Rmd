@@ -133,9 +133,9 @@ accu_summaryx %>%
         group = target_straight, shape = target_straight, linetype = target_straight)) + 
   stat_summary(fun.data = "mean_cl_boot", alpha = .5) +
   stat_summary(fun.y = "mean", alpha = .5, geom = "line") + 
-  
   theme(aspect.ratio = 1) + 
-  xlab("c") + ylab("Accuracy")
+  scale_shape_discrete("Target straighter") + 
+  xlab("contrast") + ylab("Accuracy")
 ```
 
 ```{r Charts1b kl distance}

@@ -146,21 +146,33 @@ df_exp1a %>%
 # Experiment 1b
 
 ```{r exp1b  - load data}
-df_exp1b <- readRDS(file.path(data_pth,"exp1b","responses","responses_150622.rds")) %>% 
+#df_exp1b <- readRDS(file.path(data_pth,"exp1b","responses","responses_150622.rds")) %>% 
   filter(block != 0) 
 
 participants_exp1b <- read.csv(file.path(data_pth,"exp1b","participants_150526.csv"), fileEncoding = "UTF8")
 
-df2_exp1b <- rbind(df_exp1b,df_exp1b)
-df2_exp1b$version <- 2
-df2_exp1b$version[1:nrow(df_exp1b)] <- 1
+#df2_exp1b <- rbind(df_exp1b,df_exp1b)
+#df2_exp1b$version <- 2
+#df2_exp1b$version[1:nrow(df_exp1b)] <- 1
 
 # this is a little hack, just to make a correct ggplot with one line
-tmp <- df_exp1b$restk
-df2_exp1b$restk[df2_exp1b$version == 2] <- df_exp1b$type
-df2_exp1b$type[df2_exp1b$version == 2] <- tmp
+#tmp <- df_exp1b$restk
+#df2_exp1b$restk[df2_exp1b$version == 2] <- df_exp1b$type
+#df2_exp1b$type[df2_exp1b$version == 2] <- tmp
 
-df2_exp1b$version <- factor(df2_exp1b$version, labels = c("fix distractors' k", "fix target's k"))
+#df2_exp1b$version <- factor(df2_exp1b$version, labels = c("fix distractors' k", "fix target's k"))
+
+df_exp1b <- 
+  readRDS(
+    file.path(data_pth, "exp1b", "responses", "responses_150622.rds")) %>% 
+  filter(block != 0) %>% as_tibble(.) %>% 
+  rename(targetk = type) %>% mutate(id = factor(subject)) %>% 
+  mutate(contrast_abs = abs(log2(targetk / restk)), 
+         target_straight = (targetk > restk),
+         ratio = (besselI(restk,0) * exp(targetk)) / (besselI(targetk,0) * exp(restk)),
+         ratio_abs = abs(log((besselI(restk,0) * exp(targetk))) / (besselI(targetk,0) * exp(restk))),
+         ratio_abs = abs(log(
+           (besselI(restk,0) * exp(targetk))) / (besselI(targetk,0) * exp(restk))))
 ```
 
 ## Participant info
@@ -172,28 +184,37 @@ c(mean(participants_exp1b$age), sd(participants_exp1b$age)) %>% round(2)
 ## Figure 3
 
 ```{r Figure 3}
+accu_summary <- df_exp1b %>% 
+  mutate(contrast_abs_f = as.character(contrast_abs)) %>% 
+  group_by(id, contrast_abs, contrast_abs_f, target_straight) %>% 
+  dplyr::summarise(accu = mean(accuracy), n = n()) %>% 
+  ungroup()
+accu_summary_wo_0 <- accu_summary %>% filter(contrast_abs > 0)
 
-p_k2 <- plot_fig3(2)
-p_k4 <- plot_fig3(4)
-p_k8 <- plot_fig3(8)
-p_k16 <- plot_fig3(16)
-p_k64 <- plot_fig3(64)
-p_k64_legend <- plot_fig3(64, show_legend = T)
+# duplicated values for contrast 0
+accu_summaryx <- bind_rows(
+  accu_summary,
+  accu_summary %>% 
+    filter(contrast_abs == 0, target_straight == F) %>% 
+    mutate(target_straight = T)
+)
 
-
-gridExtra::grid.arrange(p_k2,p_k4, p_k8, p_k16, p_k64, ncol = 3)
-ggsave(file.path(plot_pth, "Fig3_k2.eps"), p_k2, width = 6, height = 6)
-ggsave(file.path(plot_pth, "Fig3_k4.eps"), p_k4, width = 6, height = 6)
-ggsave(file.path(plot_pth, "Fig3_k8.eps"), p_k8, width = 6, height = 6)
-ggsave(file.path(plot_pth, "Fig3_k16.eps"), p_k16, width = 6, height = 6)
-ggsave(file.path(plot_pth, "Fig3_k64.eps"), p_k64, width = 6, height = 6)
-ggsave(file.path(plot_pth, "Fig3_k64_legend.eps"), p_k64_legend, width = 6, height = 6)
-# final plot was created in inkscape
+p <- accu_summaryx %>% 
+  ggplot(
+    aes(x = contrast_abs, y = accu, 
+        group = target_straight, shape = target_straight, linetype = target_straight)) + 
+  stat_summary(fun.data = "mean_cl_boot", alpha = .5) +
+  stat_summary(fun.y = "mean", alpha = .5, geom = "line") + 
+  theme(aspect.ratio = 1) + 
+  scale_shape_discrete("Distractor type", labels = c("More Ballistic-like", "More Brownian-like")) +
+  scale_linetype_discrete("Distractor type", labels = c("More Ballistic-like", "More Brownian-like")) +
+  xlab("contrast") + ylab("Accuracy")
+ggsave(file.path(plot_pth, "Figure3.png"), p, width = 9, height = 6)
 ```
 
 ## Compute the asymmetry
 
-We run multiple within subject aova
+We run multiple within subject anova
 
 ```{r exp 1b - compute the assymetry, warning=F}
 df3_exp1b <- df2_exp1b %>% group_by(type, restk) %>% do(p=compute.p(.))
@@ -496,3 +517,23 @@ differencies %>% range() %>% round(2)
 
 ```
 
+# Appendix
+
+```{r}
+#p_k2 <- plot_fig3(2)
+#p_k4 <- plot_fig3(4)
+#p_k8 <- plot_fig3(8)
+#p_k16 <- plot_fig3(16)
+#p_k64 <- plot_fig3(64)
+#p_k64_legend <- plot_fig3(64, show_legend = T)
+
+
+#gridExtra::grid.arrange(p_k2,p_k4, p_k8, p_k16, p_k64, ncol = 3)
+#ggsave(file.path(plot_pth, "Fig3_k2.eps"), p_k2, width = 6, height = 6)
+#ggsave(file.path(plot_pth, "Fig3_k4.eps"), p_k4, width = 6, height = 6)
+#ggsave(file.path(plot_pth, "Fig3_k8.eps"), p_k8, width = 6, height = 6)
+#ggsave(file.path(plot_pth, "Fig3_k16.eps"), p_k16, width = 6, height = 6)
+#ggsave(file.path(plot_pth, "Fig3_k64.eps"), p_k64, width = 6, height = 6)
+#ggsave(file.path(plot_pth, "Fig3_k64_legend.eps"), p_k64_legend, width = 6, height = 6)
+# final plot was created in inkscape
+```
