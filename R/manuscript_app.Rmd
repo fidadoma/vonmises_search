@@ -362,7 +362,7 @@ df_exp2a %>%
   filter(restk2 == "Slow-moving-distractors") %>% 
   ez::ezANOVA(dv = accuracy,
         wid = subject,
-        within = type, 
+        within = as.type, 
         detailed = T) %>% 
   apa::anova_apa()
 
