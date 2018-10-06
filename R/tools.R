@@ -167,42 +167,22 @@ plot_fig5 <- function(restspd, show_legend = F) {
 }
 
 plot_fig5b <- function(restspd, show_legend = F) {
-  restk_lab <- as_labeller(c(`2` = expression("Distractor's"~kappa~"=2"), 
-                             `4` = expression("Distractor's"~kappa~"=4"),
-                             `8` = expression("Distractor's"~kappa~"=8"),
-                             `16` = expression("Distractor's"~kappa~"=16"),
-                             `64` = expression("Distractor's"~kappa~"=64")), label_parsed)
-  p <- df_exp1b %>% 
-    ggplot(aes(x = targetk, y = accuracy)) + 
-    facet_grid(~restk, labeller = restk_lab) +
-    stat_summary(fun.data = "mean_cl_boot") + 
-    stat_summary(fun.y = mean, geom = "line") + 
-    geom_hline(yintercept=0.125) + 
-    theme(aspect.ratio = 1)  + xlab(expression("Target's"~kappa)) + 
-    ylab("Accuracy") + 
-    ylim(0,1)+
-    scale_x_continuous(expression("Target's"~kappa~" (log scale)"),breaks = c(1,2,4,8,16,64),labels = c("1","2","4","8","16","64"), trans = "log2") + 
-    theme(plot.title = element_text(hjust = 0.5))
-  p
-  
+   
   p <- df_exp2b %>%
+    filter(restk == restspd) %>% 
     ggplot(aes(x = type, y = accuracy,xintercept = restk)) + 
-    facet_grid(~restk) +
     stat_summary(fun.data = "mean_cl_boot") + 
     stat_summary(fun.y = mean, geom = "line") + 
     geom_hline(yintercept=0.125) +
     theme(aspect.ratio = 1) + 
     ylab("Accuracy") + 
     ylim(0,1)+
-    scale_x_continuous("Variable speed (log scale)",breaks = c(.005,.01,.02,.04,.08),labels = c("0.5","1","2","4","8"),
+    scale_x_continuous("Target speed (log scale)",breaks = c(.5,1,2,4,8),labels = c("0.5","1","2","4","8"),
                        trans = "log2") + 
-    geom_vline(aes(xintercept = restk), linetype = 2) +
-    ggtitle(bquote("Fixed speed = "~.(restspd)*degree*"/s"))
-  if (show_legend) {
-    p 
-  } else {
-    p + theme(legend.position="none")
-  }   
+    geom_vline(aes(xintercept = restk), linetype = 2)  +
+    ggtitle(bquote("Distractors' speed = "~.(restspd)*degree*"/s"))
+    
+  p
 }
 
 

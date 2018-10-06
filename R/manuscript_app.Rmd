@@ -167,7 +167,7 @@ df_exp1b <-
   readRDS(
     file.path(data_pth, "exp1b", "responses", "responses_150622.rds")) %>% 
   filter(block != 0) %>% as_tibble(.) %>% 
-  rename(targetk = type) %>% mutate(id = factor(subject)) %>% 
+  rename(tagetspd = type) %>% mutate(id = factor(subject)) %>% 
   mutate(contrast_abs = abs(log2(targetk / restk)), 
          target_straight = (targetk > restk),
          ratio = (besselI(restk,0) * exp(targetk)) / (besselI(targetk,0) * exp(restk)),
@@ -445,23 +445,31 @@ df_exp2a %>% group_by(type, restk,subject) %>% summarize(accuracy = mean(accurac
 # Experiment 2b
 
 ```{r exp 2b - load data}
-df_exp2b <- readRDS(here::here("..", "data", "exp2b", "responses", "responses_171023.rds")) %>% 
- filter(block != 0) 
-
-df_exp2b <- df_exp2b %>% mutate(restk = restk * 100, type = type * 100)
+df_exp2b <- 
+  readRDS(
+    file.path(data_pth, "exp2b", "responses", "responses_171023.rds")) %>% 
+  filter(block != 0) %>% as_tibble(.) %>% 
+  rename(targetspd = type, restspd = restk) %>% 
+  mutate(id = factor(subject)) %>% 
+  mutate(restspd = restspd * 100, targetspd = targetspd * 100) %>% 
+  mutate(contrast_abs = abs(log2(targetspd / restspd)), 
+         target_faster = (targetspd > restspd),
+         ratio = (besselI(restspd,0) * exp(targetspd)) / (besselI(targetspd,0) * exp(restspd)),
+         ratio_abs = abs(log((besselI(restspd,0) * exp(targetspd))) / (besselI(targetspd,0) * exp(restspd))),
+         ratio_abs = abs(log((besselI(restspd,0) * exp(targetspd))) / (besselI(targetspd,0) * exp(restspd))))
 
 participants_exp2b <- read.csv(here::here("..", "data", "exp2b", "participants_171023.csv"))
 
-df2_exp2b <- rbind(df_exp2b, df_exp2b)
-df2_exp2b$version <- 2
-df2_exp2b$version[1:nrow(df_exp2b)] <- 1
-
-# this is a little hack, just to make a correct ggplot with one line
-tmp <- df_exp2b$restk
-df2_exp2b$restk[df2_exp2b$version == 2] <- df_exp2b$type
-df2_exp2b$type[df2_exp2b$version == 2] <- tmp
-
-df2_exp2b$version <- factor(df2_exp2b$version, labels = c("fix distractors' speed", "fix target's speed"))
+# df2_exp2b <- rbind(df_exp2b, df_exp2b)
+# df2_exp2b$version <- 2
+# df2_exp2b$version[1:nrow(df_exp2b)] <- 1
+# 
+# # this is a little hack, just to make a correct ggplot with one line
+# tmp <- df_exp2b$restk
+# df2_exp2b$restk[df2_exp2b$version == 2] <- df_exp2b$type
+# df2_exp2b$type[df2_exp2b$version == 2] <- tmp
+# 
+# df2_exp2b$version <- factor(df2_exp2b$version, labels = c("fix distractors' speed", "fix target's speed"))
 ```
 
 ## Participant info
@@ -470,28 +478,82 @@ table(participants_exp2b$gender)
 c(mean(participants_exp2b$age), sd(participants_exp2b$age)) %>% round(2)
 ```
 
+## Descriptive statistics
+
+```{r accuracy for speed differences }
+
+df_exp2b %>% filter(abs(targetspd-restspd) >= 1) %>% summarize(m = mean(accuracy), sd = sd(accuracy)) %>% knitr::kable(digits = 2)
+
+```
+
 ## Figure 5
 
 ```{r Figure 5}
 
-p_sp05 <- plot_fig5(0.5)
-p_sp1 <- plot_fig5(1)
-p_sp2 <- plot_fig5(2)
-p_sp4 <- plot_fig5(4)
-p_sp8 <- plot_fig5(8)
-p_sp8_legend <- plot_fig5(8, show_legend = T)
+
+p_sp05 <- plot_fig5b(0.5)
+p_sp1 <- plot_fig5b(1)
+p_sp2 <- plot_fig5b(2)
+p_sp4 <- plot_fig5b(4)
+p_sp8 <- plot_fig5b(8)
+#p_sp8_legend <- plot_fig5(8, show_legend = T)
 
 gridExtra::grid.arrange(p_sp05,p_sp1, p_sp2, p_sp4, p_sp8, ncol = 3)
-ggsave(file.path(plot_pth, "Fig5_sp05.eps"), p_sp05, width = 6, height = 6)
-ggsave(file.path(plot_pth, "Fig5_sp1.eps"), p_sp1, width = 6, height = 6)
-ggsave(file.path(plot_pth, "Fig5_sp2.eps"), p_sp2, width = 6, height = 6)
-ggsave(file.path(plot_pth, "Fig5_sp4.eps"), p_sp4, width = 6, height = 6)
-ggsave(file.path(plot_pth, "Fig5_sp8.eps"), p_sp8, width = 6, height = 6)
-ggsave(file.path(plot_pth, "Fig5_sp8_legend.eps"), p_sp8_legend, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Fig5b_sp05.eps"), p_sp05, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Fig5b_sp1.eps"), p_sp1, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Fig5b_sp2.eps"), p_sp2, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Fig5b_sp4.eps"), p_sp4, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Fig5b_sp8.eps"), p_sp8, width = 6, height = 6)
+
 # final plot was created in inkscape
 ```
 
+## Figure 6
+
+```{r}
+
+accu_summary <- df_exp2b %>% 
+  mutate(contrast_abs_f = as.character(contrast_abs)) %>% 
+  group_by(id, contrast_abs, contrast_abs_f, target_faster) %>% 
+  dplyr::summarise(accu = mean(accuracy), n = n()) %>% 
+  ungroup()
+accu_summary_wo_0 <- accu_summary %>% filter(contrast_abs > 0)
+
+# duplicated values for contrast 0
+accu_summaryx <- bind_rows(
+  accu_summary,
+  accu_summary %>% 
+    filter(contrast_abs == 0, target_faster == F) %>% 
+    mutate(target_faster = T)
+)
+
+p <- accu_summaryx %>% 
+  ggplot(
+    aes(x = contrast_abs, y = accu, 
+        group = target_faster, shape = target_faster, linetype = target_faster)) + 
+  stat_summary(fun.data = "mean_cl_boot", alpha = .5, linetype = "solid") +
+  stat_summary(fun.y = "mean", alpha = .5, geom = "line") + 
+  theme(aspect.ratio = 1) + 
+  scale_shape_discrete("Distractor type", labels = c("Faster then target", "Slower than target")) +
+  scale_linetype_discrete("Distractor type", labels = c("Faster then target", "Slower than target")) +
+  xlab("contrast") + ylab("Accuracy")
+p
+ggsave(file.path(plot_pth, "Figure6.png"), p, width = 9, height = 6)
+
+```
+
 ## Compute the asymmetry
+
+```{r exp2b - tests}
+accu_summaryx %>%
+  filter(contrast_abs!=0) %>% 
+  group_by(contrast_abs) %>% 
+  do(ez::ezANOVA(., dv = accu, wid = id, within = target_faster, detailed = T)$ANOVA) %>% 
+  filter(Effect != "(Intercept)") %>% 
+  mutate(p = round(p, 3), ges = round(ges,2), F = round(F,1)) %>% 
+  transmute(`Contrast level` = contrast_abs, `F(1,15)`=F,p, ges) %>% 
+  knitr::kable()
+```
 
 ```{r exp 2b - compute the assymetry, warning=F}
 df3_exp2b <- df2_exp2b %>% group_by(type, restk) %>% do(p=compute.p(.))
