@@ -86,7 +86,7 @@ plot_fig2 <- function(restk_var, ggtit) {
 
 plot_fig3 <- function(restk_var, show_legend = F) {
   
-  p <- df2_exp1b %>%
+  p <- df_exp1b %>%
     filter(restk == restk_var) %>%
     ggplot(aes(x = type, y = accuracy, group = version)) + 
     #facet_grid(~ restk) + 
@@ -96,8 +96,7 @@ plot_fig3 <- function(restk_var, show_legend = F) {
     theme(aspect.ratio = 1) + 
     ylab("Accuracy") + 
     ylim(0,1)+
-    scale_x_continuous(expression("Variable"~kappa~" (log scale)"),breaks = c(2,4,8,16,64),labels = c("2","4","8","16","64"), trans = "log2") + 
-    scale_linetype_manual(values = c(2,1)) +
+    scale_x_continuous(expression("Target's"~kappa~" (log scale)"),breaks = c(2,4,8,16,64),labels = c("2","4","8","16","64"), trans = "log2") + 
     geom_vline(xintercept = restk_var, linetype = 2) +
     ggtitle(bquote("Fixed "~kappa~"= "~.(restk_var))) +
     theme(plot.title = element_text(hjust = 0.5))
