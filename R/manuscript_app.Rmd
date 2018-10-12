@@ -493,6 +493,8 @@ c(mean(participants_exp2b$age), sd(participants_exp2b$age)) %>% round(2)
 
 df_exp2b %>% filter(abs(targetspd-restspd) >= 1) %>% summarize(m = mean(accuracy), sd = sd(accuracy)) %>% knitr::kable(digits = 2)
 
+accu_summaryx %>% filter(contrast_abs >= 2, target_faster== F) %>% summarize(m = mean(accu), sd = sd(accu)) %>% knitr::kable(digits = 2)
+
 ```
 
 ## Figure 5
