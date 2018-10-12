@@ -75,7 +75,8 @@ plot_fig2 <- function(restk_var, ggtit) {
     stat_summary(fun.data = "mean_cl_boot") + 
     stat_summary(fun.y = mean, geom = "line", aes(group = 1)) + 
     geom_hline(yintercept=0.125) + 
-    theme(aspect.ratio = 1)  + xlab(expression("Target's"~kappa)) + 
+    theme(aspect.ratio = 1) + 
+    xlab(expression("Target's"~kappa)) + 
     ylab("Accuracy") + 
     ylim(0,1)+
     scale_x_continuous(expression("Target's"~kappa~" (log scale)"),breaks = c(1,2,4,8,16,32,64,128),labels = c("1","2","4","8","16","32","64","128"), trans = "log2") + 
@@ -88,17 +89,17 @@ plot_fig3 <- function(restk_var, show_legend = F) {
   
   p <- df_exp1b %>%
     filter(restk == restk_var) %>%
-    ggplot(aes(x = type, y = accuracy, group = version)) + 
+    ggplot(aes(x = type, y = accuracy, group = 1)) + 
     #facet_grid(~ restk) + 
     stat_summary(fun.data = "mean_cl_boot") + 
-    stat_summary(fun.y = mean, geom = "line", aes(group = version, linetype = version)) + 
+    stat_summary(fun.y = mean, geom = "line") + 
     geom_hline(yintercept=0.125) +
     theme(aspect.ratio = 1) + 
     ylab("Accuracy") + 
     ylim(0,1)+
     scale_x_continuous(expression("Target's"~kappa~" (log scale)"),breaks = c(2,4,8,16,64),labels = c("2","4","8","16","64"), trans = "log2") + 
     geom_vline(xintercept = restk_var, linetype = 2) +
-    ggtitle(bquote("Fixed "~kappa~"= "~.(restk_var))) +
+    ggtitle(bquote("Distractors'"~kappa == .(restk_var))) +
     theme(plot.title = element_text(hjust = 0.5))
   
   if (show_legend) {
