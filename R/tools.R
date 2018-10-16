@@ -68,7 +68,7 @@ compute.des <- function(dfx) {
   
 }
 
-plot_fig2 <- function(restk_var, ggtit) {
+plot_fig3 <- function(restk_var, ggtit) {
   df_exp1a %>%
     filter(restk == restk_var) %>%
     ggplot(aes(x = type, y = accuracy)) + 
@@ -85,11 +85,11 @@ plot_fig2 <- function(restk_var, ggtit) {
     theme(plot.title = element_text(hjust = 0.5))
 }
 
-plot_fig3 <- function(restk_var, show_legend = F) {
+plot_fig4 <- function(restk_var, show_legend = F) {
   
   p <- df_exp1b %>%
     filter(restk == restk_var) %>%
-    ggplot(aes(x = type, y = accuracy, group = 1)) + 
+    ggplot(aes(x = targetk, y = accuracy, group = 1)) + 
     #facet_grid(~ restk) + 
     stat_summary(fun.data = "mean_cl_boot") + 
     stat_summary(fun.y = mean, geom = "line") + 
@@ -130,7 +130,7 @@ plot_fig3a <- function() {
   p
 }
 
-plot_fig4 <- function(restspd, ggtit) {
+plot_fig6 <- function(restspd, ggtit) {
   df_exp2a %>%
     filter(restk == restspd) %>%
     ggplot(aes(x = type, y = accuracy)) + 
@@ -145,32 +145,39 @@ plot_fig4 <- function(restspd, ggtit) {
     ggtitle(ggtit)
 }
 
-plot_fig5 <- function(restspd, show_legend = F) {
-  p <- df2_exp2b %>%
-    filter(restk == restspd) %>%
-    ggplot(aes(x = type, y = accuracy, group = version)) + 
-    stat_summary(fun.data = "mean_cl_boot") + 
-    stat_summary(fun.y = mean, geom = "line", aes(group = version, linetype = version)) + 
-    geom_hline(yintercept=0.125) +
+plot_fig5 <- function() {
+  accu_summary <- df_exp1b %>% 
+    mutate(contrast_abs_f = as.character(contrast_abs)) %>% 
+    group_by(id, contrast_abs, contrast_abs_f, target_straight) %>% 
+    dplyr::summarise(accu = mean(accuracy), n = n()) %>% 
+    ungroup()
+  accu_summary_wo_0 <- accu_summary %>% filter(contrast_abs > 0)
+  
+  # duplicated values for contrast 0
+  accu_summaryx <- bind_rows(
+    accu_summary,
+    accu_summary %>% 
+      filter(contrast_abs == 0, target_straight == F) %>% 
+      mutate(target_straight = T)
+  )
+  
+  p <- accu_summaryx %>% 
+    ggplot(
+      aes(x = contrast_abs, y = accu, 
+          group = target_straight, shape = target_straight, linetype = target_straight)) + 
+    stat_summary(fun.data = "mean_cl_boot", alpha = .5) +
+    stat_summary(fun.y = "mean", alpha = .5, geom = "line") + 
     theme(aspect.ratio = 1) + 
-    ylab("Accuracy") + 
-    ylim(0,1)+
-    scale_x_continuous("Variable speed (log scale)",breaks = c(.5,1,2,4,8),labels = c(".5","1","2","4","8"),
-                       trans = "log2") + 
-    geom_vline(xintercept = restspd, linetype = 2) +
-    ggtitle(bquote("Fixed speed = "~.(restspd)*degree*"/s"))
-  if (show_legend) {
-    p 
-  } else {
-    p + theme(legend.position="none")
-  }   
+    scale_shape_discrete("Distractor type", labels = c("More Ballistic-like", "More Brownian-like")) +
+    scale_linetype_discrete("Distractor type", labels = c("More Ballistic-like", "More Brownian-like")) +
+    xlab("contrast") + ylab("Accuracy")
 }
 
-plot_fig5b <- function(restspd, show_legend = F) {
+plot_fig7 <- function(rest_spd, show_legend = F) {
    
   p <- df_exp2b %>%
-    filter(restk == restspd) %>% 
-    ggplot(aes(x = type, y = accuracy,xintercept = restk)) + 
+    filter(restspd == rest_spd) %>% 
+    ggplot(aes(x = targetspd, y = accuracy, xintercept = rest_spd)) + 
     stat_summary(fun.data = "mean_cl_boot") + 
     stat_summary(fun.y = mean, geom = "line") + 
     geom_hline(yintercept=0.125) +
@@ -179,12 +186,39 @@ plot_fig5b <- function(restspd, show_legend = F) {
     ylim(0,1)+
     scale_x_continuous("Target speed (log scale)",breaks = c(.5,1,2,4,8),labels = c("0.5","1","2","4","8"),
                        trans = "log2") + 
-    geom_vline(aes(xintercept = restk), linetype = 2)  +
-    ggtitle(bquote("Distractors' speed = "~.(restspd)*degree*"/s"))
+    geom_vline(aes(xintercept = rest_spd), linetype = 2)  +
+    ggtitle(bquote("Distractors' speed = "~.(rest_spd)*degree*"/s"))
     
   p
 }
 
+plot_fig8 <- function(){
+  accu_summary <- df_exp2b %>% 
+    mutate(contrast_abs_f = as.character(contrast_abs)) %>% 
+    group_by(id, contrast_abs, contrast_abs_f, target_faster) %>% 
+    dplyr::summarise(accu = mean(accuracy), n = n()) %>% 
+    ungroup()
+  accu_summary_wo_0 <- accu_summary %>% filter(contrast_abs > 0)
+  
+  # duplicated values for contrast 0
+  accu_summaryx <- bind_rows(
+    accu_summary,
+    accu_summary %>% 
+      filter(contrast_abs == 0, target_faster == F) %>% 
+      mutate(target_faster = T)
+  )
+  
+  p <- accu_summaryx %>% 
+    ggplot(
+      aes(x = contrast_abs, y = accu, 
+          group = target_faster, shape = target_faster, linetype = target_faster)) + 
+    stat_summary(fun.data = "mean_cl_boot", alpha = .5, linetype = "solid") +
+    stat_summary(fun.y = "mean", alpha = .5, geom = "line") + 
+    theme(aspect.ratio = 1) + 
+    scale_shape_discrete("Distractor type", labels = c("Faster then target", "Slower than target")) +
+    scale_linetype_discrete("Distractor type", labels = c("Faster then target", "Slower than target")) +
+    xlab("contrast") + ylab("Accuracy")
+}
 
 create_data_scheme_vonmises <- function(nDot, kappa, t) {
   ang <- rvonmises(nDot,circular(0), kappa, control.circular=list(units="radians"))

@@ -2,7 +2,9 @@
 title: "manuscript - APP"
 author: "Filip Dechterenko"
 date: '`r format(Sys.time(), "%d %B, %Y")`'
-output: html_document
+output:
+  word_document: default
+  html_document: default
 ---
 
 ## Load libraries
@@ -64,7 +66,12 @@ df_exp1a %>%
 
 ## Figure 1
 
-```{r Figure 1}
+Created by script *generate_vonmises_example*
+
+
+## Figure 2
+
+```{r Figure 2}
 traj_k64 <- read.table(file.path(data_pth, "exp1a", "trajectories", "T001_64_rest4.csv")) %>% select(x = V1,y = V2) %>% as_data_frame()
 p1 <- traj_k64 %>% ggplot(aes(x,y)) + geom_point() + theme(aspect.ratio = 1) + xlim(-15,15)+ylim(-15,15) +
   ggtitle("Ballistic-like")
@@ -75,25 +82,25 @@ p2 <- traj_k4 %>% ggplot(aes(x,y)) + geom_point() + theme(aspect.ratio = 1) + xl
 gridExtra::grid.arrange(p1,p2, ncol = 2)
 
 
-ggsave(file.path(plot_pth, "Figure1_ballistic.png"), p1, width = 6, height = 6)
-ggsave(file.path(plot_pth, "Figure1_brownian.png"), p2, width = 6, height = 6)
-ggsave(file.path(plot_pth, "Figure1_ballistic.eps"), p1, width = 6, height = 6)
-ggsave(file.path(plot_pth, "Figure1_brownian.eps"), p2, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Figure2_ballistic.png"), p1, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Figure2_brownian.png"), p2, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Figure2_ballistic.eps"), p1, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Figure2_brownian.eps"), p2, width = 6, height = 6)
 ```
 
-## Figure 2
+## Figure 3
 
-```{r Figure 2}
+```{r Figure 3}
 
-p1 <- plot_fig2(4, "Brownian-like-distractors")
-p2 <- plot_fig2(16, "Ballistic-like-distractors")
+p1 <- plot_fig3(4, "Brownian-like-distractors")
+p2 <- plot_fig3(16, "Ballistic-like-distractors")
   
 gridExtra::grid.arrange(p1,p2, ncol = 2)
 
-ggsave(file.path(plot_pth, "Figure2_brownian.png"), p1, width = 6, height = 6)
-ggsave(file.path(plot_pth, "Figure2_ballistic.png"), p2, width = 6, height = 6)
-ggsave(file.path(plot_pth, "Figure2_brownian.eps"), p1, width = 6, height = 6)
-ggsave(file.path(plot_pth, "Figure2_ballistic.eps"), p2, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Figure3_brownian.png"), p1, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Figure3_ballistic.png"), p2, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Figure3_brownian.eps"), p1, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Figure3_ballistic.eps"), p2, width = 6, height = 6)
 ```
 
 ## Overall differences
@@ -167,7 +174,7 @@ df_exp1b <-
   readRDS(
     file.path(data_pth, "exp1b", "responses", "responses_150622.rds")) %>% 
   filter(block != 0) %>% as_tibble(.) %>% 
-  rename(tagetspd = type) %>% mutate(id = factor(subject)) %>% 
+  rename(targetk = type) %>% mutate(id = factor(subject)) %>% 
   mutate(contrast_abs = abs(log2(targetk / restk)), 
          target_straight = (targetk > restk),
          ratio = (besselI(restk,0) * exp(targetk)) / (besselI(targetk,0) * exp(restk)),
@@ -182,64 +189,52 @@ table(participants_exp1b$gender)
 c(mean(participants_exp1b$age), sd(participants_exp1b$age)) %>% round(2)
 ```
 
-## Figure 3a
+## Figure 4
 
-```{r}
-p_k2 <- plot_fig3(2)
-p_k4 <- plot_fig3(4)
-p_k8 <- plot_fig3(8)
-p_k16 <- plot_fig3(16)
-p_k64 <- plot_fig3(64)
-p_k64_legend <- plot_fig3(64, show_legend = T)
+```{r Figure 4}
+p_k2 <- plot_fig4(2)
+p_k4 <- plot_fig4(4)
+p_k8 <- plot_fig4(8)
+p_k16 <- plot_fig4(16)
+p_k64 <- plot_fig4(64)
+p_k64_legend <- plot_fig4(64, show_legend = T)
 
 
 gridExtra::grid.arrange(p_k2,p_k4, p_k8, p_k16, p_k64, ncol = 3)
-ggsave(file.path(plot_pth, "Fig3_k2.eps"), p_k2, width = 6, height = 6)
-ggsave(file.path(plot_pth, "Fig3_k4.eps"), p_k4, width = 6, height = 6)
-ggsave(file.path(plot_pth, "Fig3_k8.eps"), p_k8, width = 6, height = 6)
-ggsave(file.path(plot_pth, "Fig3_k16.eps"), p_k16, width = 6, height = 6)
-ggsave(file.path(plot_pth, "Fig3_k64.eps"), p_k64, width = 6, height = 6)
-ggsave(file.path(plot_pth, "Fig3_k64_legend.eps"), p_k64_legend, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Fig4_k2.eps"), p_k2, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Fig4_k4.eps"), p_k4, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Fig4_k8.eps"), p_k8, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Fig4_k16.eps"), p_k16, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Fig4_k64.eps"), p_k64, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Fig4_k64_legend.eps"), p_k64_legend, width = 6, height = 6)
 # final plot was created in inkscape
 ```
 
-## Figure 3b
+## Figure 5
 
-```{r Figure 3b}
-accu_summary <- df_exp1b %>% 
-  mutate(contrast_abs_f = as.character(contrast_abs)) %>% 
-  group_by(id, contrast_abs, contrast_abs_f, target_straight) %>% 
-  dplyr::summarise(accu = mean(accuracy), n = n()) %>% 
-  ungroup()
-accu_summary_wo_0 <- accu_summary %>% filter(contrast_abs > 0)
+```{r Figure 5}
 
-# duplicated values for contrast 0
-accu_summaryx <- bind_rows(
-  accu_summary,
-  accu_summary %>% 
-    filter(contrast_abs == 0, target_straight == F) %>% 
-    mutate(target_straight = T)
-)
+p <- plot_fig5()
+ggsave(file.path(plot_pth, "Figure5.png"), p, width = 9, height = 6)
+```
 
-p <- accu_summaryx %>% 
-  ggplot(
-    aes(x = contrast_abs, y = accu, 
-        group = target_straight, shape = target_straight, linetype = target_straight)) + 
-  stat_summary(fun.data = "mean_cl_boot", alpha = .5) +
-  stat_summary(fun.y = "mean", alpha = .5, geom = "line") + 
-  theme(aspect.ratio = 1) + 
-  scale_shape_discrete("Distractor type", labels = c("More Ballistic-like", "More Brownian-like")) +
-  scale_linetype_discrete("Distractor type", labels = c("More Ballistic-like", "More Brownian-like")) +
-  xlab("contrast") + ylab("Accuracy")
-p
-ggsave(file.path(plot_pth, "Figure3.png"), p, width = 9, height = 6)
+## Table 1
+
+```{r Table 1, warning=F, message=F}
+df_exp1b %>% 
+  filter(contrast_abs > 0) %>% 
+  group_by(contrast_abs) %>% 
+  do(ez::ezANOVA(data = ., dv = accuracy, within = .(target_straight), wid = id)$ANOVA) %>% 
+  ungroup() %>% 
+  transmute(`Contrast level` = contrast_abs, `F(1,16)` = F, p = round(p, 3), ges = round(ges,2)) %>% 
+  knitr::kable(caption = "Results of within-subject ANCOVAs for each contrast level for movement variability")
 ```
 
 ## Compute the asymmetry
 
 We run multiple within subject anova
 
-```{r exp 1b - compute the assymetry, warning=F}
+```{r exp 1b - compute the assymetry, warning=F,eval = FALSE}
 df3_exp1b <- df2_exp1b %>% group_by(type, restk) %>% do(p=compute.p(.))
 
 df3_exp1b$p <- unlist(df3_exp1b$p) %>% round(3)
@@ -277,8 +272,8 @@ df3_exp1b %>% filter(p < .05)
 
 ```{r exp1b - test vs baseline}
 df_exp1b %>% 
-  group_by(type, restk, subject) %>% 
-  summarize(accuracy = mean(accuracy)) %>% group_by(restk, type) %>%
+  group_by(targetk, restk, subject) %>% 
+  summarize(accuracy = mean(accuracy)) %>% group_by(restk, targetk) %>%
   filter(accuracy < 1) %>% 
   do(t.test(.$accuracy, mu = .125) %>% 
        broom::tidy()) %>% 
@@ -286,41 +281,6 @@ df_exp1b %>%
   knitr::kable()
 ```
 
-## Table 1
-
-```{r exp 1b - Table 1}
-df_exp1b %>% 
-  filter(restk == 2) %>% 
-  ez::ezANOVA(dv = accuracy,
-        wid = subject,
-        within = type, 
-        detailed = T) %>% 
-  apa::anova_apa()
-
-df_exp1b %>% 
-  filter(restk == 4) %>% 
-  ez::ezANOVA(dv = accuracy,
-        wid = subject,
-        within = type, 
-        detailed = T) %>% 
-  apa::anova_apa()
-df_exp1b %>% 
-  filter(restk == 8) %>% 
-  ez::ezANOVA(dv = accuracy,
-        wid = subject,
-        within = type, 
-        detailed = T) %>% 
-  apa::anova_apa()
-
-df_exp1b %>% 
-  filter(restk == 16) %>% 
-  ez::ezANOVA(dv = accuracy,
-        wid = subject,
-        within = type, 
-        detailed = T) %>% 
-  apa::anova_apa()
-
-```
 
 # Experiment 2a
 
@@ -370,8 +330,8 @@ df_exp2a %>%
 df_exp2a %>% 
   filter(restk2 == "Slow-moving-distractors") %>% 
   ez::ezANOVA(dv = accuracy,
-        wid = subject,
-        within = as.type, 
+        wid = as.factor(subject),
+        within = type, 
         detailed = T) %>% 
   apa::anova_apa()
 
@@ -379,7 +339,7 @@ df_exp2a %>%
   filter(restk2 == "Fast-moving-distractors") %>% 
   ez::ezANOVA(dv = accuracy,
         wid = as.factor(subject),
-        within = as.factor(type), 
+        within = type, 
         detailed = T) %>% 
   apa::anova_apa()
 
@@ -424,20 +384,20 @@ df_exp2a %>%
 ```
 
 
-### Figure 4
+### Figure 6
 
-```{r Figure 4}
+```{r Figure 6}
 
-p1 <- plot_fig4(2, ggtit = "Slow-moving-distractors") 
+p1 <- plot_fig6(2, ggtit = "Slow-moving-distractors") 
 
-p2 <- plot_fig4(4, ggtit = "Fast-moving-distractors")
+p2 <- plot_fig6(4, ggtit = "Fast-moving-distractors")
 
 gridExtra::grid.arrange(p1,p2, ncol = 2)
 
-ggsave(file.path(plot_pth, "Figure4_slow.png"), p1, width = 6, height = 6)
-ggsave(file.path(plot_pth, "Figure4_fast.png"), p2, width = 6, height = 6)
-ggsave(file.path(plot_pth, "Figure4_slow.eps"), p1, width = 6, height = 6)
-ggsave(file.path(plot_pth, "Figure4_fast.eps"), p2, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Figure6_slow.png"), p1, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Figure6_fast.png"), p2, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Figure6_slow.eps"), p1, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Figure6_fast.eps"), p2, width = 6, height = 6)
 ```
 
 
@@ -469,16 +429,6 @@ df_exp2b <-
 
 participants_exp2b <- read.csv(here::here("..", "data", "exp2b", "participants_171023.csv"))
 
-# df2_exp2b <- rbind(df_exp2b, df_exp2b)
-# df2_exp2b$version <- 2
-# df2_exp2b$version[1:nrow(df_exp2b)] <- 1
-# 
-# # this is a little hack, just to make a correct ggplot with one line
-# tmp <- df_exp2b$restk
-# df2_exp2b$restk[df2_exp2b$version == 2] <- df_exp2b$type
-# df2_exp2b$type[df2_exp2b$version == 2] <- tmp
-# 
-# df2_exp2b$version <- factor(df2_exp2b$version, labels = c("fix distractors' speed", "fix target's speed"))
 ```
 
 ## Participant info
@@ -493,80 +443,58 @@ c(mean(participants_exp2b$age), sd(participants_exp2b$age)) %>% round(2)
 
 df_exp2b %>% filter(abs(targetspd-restspd) >= 1) %>% summarize(m = mean(accuracy), sd = sd(accuracy)) %>% knitr::kable(digits = 2)
 
-accu_summaryx %>% filter(contrast_abs >= 2, target_faster== F) %>% summarize(m = mean(accu), sd = sd(accu)) %>% knitr::kable(digits = 2)
+df_exp2b %>% filter(contrast_abs >= 2, target_faster== F) %>% summarize(m = mean(accuracy), sd = sd(accuracy)) %>% knitr::kable(digits = 2)
 
 ```
 
-## Figure 5
+## Figure 7
 
-```{r Figure 5}
+```{r Figure 7}
 
 
-p_sp05 <- plot_fig5b(0.5)
-p_sp1 <- plot_fig5b(1)
-p_sp2 <- plot_fig5b(2)
-p_sp4 <- plot_fig5b(4)
-p_sp8 <- plot_fig5b(8)
+p_sp05 <- plot_fig7(0.5)
+p_sp1 <- plot_fig7(1)
+p_sp2 <- plot_fig7(2)
+p_sp4 <- plot_fig7(4)
+p_sp8 <- plot_fig7(8)
 #p_sp8_legend <- plot_fig5(8, show_legend = T)
 
 gridExtra::grid.arrange(p_sp05,p_sp1, p_sp2, p_sp4, p_sp8, ncol = 3)
-ggsave(file.path(plot_pth, "Fig5b_sp05.eps"), p_sp05, width = 6, height = 6)
-ggsave(file.path(plot_pth, "Fig5b_sp1.eps"), p_sp1, width = 6, height = 6)
-ggsave(file.path(plot_pth, "Fig5b_sp2.eps"), p_sp2, width = 6, height = 6)
-ggsave(file.path(plot_pth, "Fig5b_sp4.eps"), p_sp4, width = 6, height = 6)
-ggsave(file.path(plot_pth, "Fig5b_sp8.eps"), p_sp8, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Fig7_sp05.eps"), p_sp05, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Fig7_sp1.eps"), p_sp1, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Fig7_sp2.eps"), p_sp2, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Fig7_sp4.eps"), p_sp4, width = 6, height = 6)
+ggsave(file.path(plot_pth, "Fig7_sp8.eps"), p_sp8, width = 6, height = 6)
 
 # final plot was created in inkscape
 ```
 
-## Figure 6
+## Figure 8
 
 ```{r}
 
-accu_summary <- df_exp2b %>% 
-  mutate(contrast_abs_f = as.character(contrast_abs)) %>% 
-  group_by(id, contrast_abs, contrast_abs_f, target_faster) %>% 
-  dplyr::summarise(accu = mean(accuracy), n = n()) %>% 
-  ungroup()
-accu_summary_wo_0 <- accu_summary %>% filter(contrast_abs > 0)
+p <- plot_fig8()
+ggsave(file.path(plot_pth, "Figure8.png"), p, width = 9, height = 6)
 
-# duplicated values for contrast 0
-accu_summaryx <- bind_rows(
-  accu_summary,
-  accu_summary %>% 
-    filter(contrast_abs == 0, target_faster == F) %>% 
-    mutate(target_faster = T)
-)
+```
 
-p <- accu_summaryx %>% 
-  ggplot(
-    aes(x = contrast_abs, y = accu, 
-        group = target_faster, shape = target_faster, linetype = target_faster)) + 
-  stat_summary(fun.data = "mean_cl_boot", alpha = .5, linetype = "solid") +
-  stat_summary(fun.y = "mean", alpha = .5, geom = "line") + 
-  theme(aspect.ratio = 1) + 
-  scale_shape_discrete("Distractor type", labels = c("Faster then target", "Slower than target")) +
-  scale_linetype_discrete("Distractor type", labels = c("Faster then target", "Slower than target")) +
-  xlab("contrast") + ylab("Accuracy")
-p
-ggsave(file.path(plot_pth, "Figure6.png"), p, width = 9, height = 6)
+## Table 2
+
+```{r exp2b - Table 2}
+df_exp2b %>% 
+  filter(contrast_abs > 0) %>% 
+  group_by(contrast_abs) %>% 
+  do(ez::ezANOVA(data = ., dv = accuracy, within = .(target_faster), wid = id)$ANOVA) %>% 
+  ungroup() %>% 
+  transmute(`Contrast level` = contrast_abs, `F(1,15)` = F, p = round(p, 3), ges = round(ges,2)) %>% 
+  knitr::kable()
 
 ```
 
 ## Compute the asymmetry
 
-```{r exp2b - tests}
-accu_summaryx %>%
-  filter(contrast_abs!=0) %>% 
-  group_by(contrast_abs) %>% 
-  do(ez::ezANOVA(., dv = accu, wid = id, within = target_faster, detailed = T)$ANOVA) %>% 
-  filter(Effect != "(Intercept)") %>% 
-  mutate(p = round(p, 3), ges = round(ges,2), F = round(F,1)) %>% 
-  transmute(`Contrast level` = contrast_abs, `F(1,15)`=F,p, ges) %>% 
-  knitr::kable()
-```
 
-```{r exp 2b - compute the assymetry, warning=F}
+```{r exp 2b - compute the assymetry, warning=F,eval = FALSE}
 df3_exp2b <- df2_exp2b %>% group_by(type, restk) %>% do(p=compute.p(.))
 
 df3_exp2b$p <- unlist(df3_exp2b$p) %>% round(3)
