@@ -85,6 +85,25 @@ plot_fig3 <- function(restk_var, ggtit) {
     theme(plot.title = element_text(hjust = 0.5))
 }
 
+plot_trial_frame <-function(tt) {
+  traj_k64 %>% 
+    filter(t == tt) %>%
+    ggplot(aes(xcoord, ycoord, group = object)) + 
+    geom_point(size = 5) + 
+    theme(aspect.ratio = 1) + 
+    xlim(-15,15) +
+    ylim(-15,15) +
+    theme(panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(),
+          panel.background = element_blank(), 
+          axis.title.x=element_blank(),
+          axis.text.x=element_blank(),
+          axis.ticks.x=element_blank(),
+          axis.title.y=element_blank(),
+          axis.text.y=element_blank(),
+          axis.ticks.y=element_blank())
+}
+
 plot_fig4 <- function(restk_var, show_legend = F) {
   
   p <- df_exp1b %>%
