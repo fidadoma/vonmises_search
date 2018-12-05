@@ -270,9 +270,9 @@ plot_vonmises_scheme <- function(df, ggtit) {
     ggplot(aes(x, y)) + 
     geom_point(alpha = I(0.1)) + 
     theme(aspect.ratio = 1) +
-    xlim(-30,30) +
-    ylim(-30,30) +
-    geom_segment(aes(x=0, xend=0, y=0, yend=8), 
+    xlim(-4,4) +
+    ylim(-4,4) +
+    geom_segment(aes(x=0, xend=0, y=0, yend=2), 
                    arrow = arrow(length = unit(0.5, "cm"), type = "closed"), size = 2, col = "red") +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
     xlab("x [deg]") + 

@@ -36,7 +36,8 @@ df_exp1a <- readRDS(file.path(data_pth,"exp1a","responses","responses_150330.rds
   filter(block != 0) %>% 
   filter(restk != "64") %>% # originally, we colledcted three levels of variaiblity, but the condition with kappa=64 showed similar results as kappa = 16
   as_data_frame() %>% 
-  mutate(restk2 = recode(restk, `4` = "Brownian-like", `16` = "Ballistic-like"))
+  mutate(restk2 = recode(restk, `4` = "Brownian-like", `16` = "Ballistic-like")) %>% 
+  mutate(type2 = as.factor(type))
 
 participants_exp1a <- read.csv(file.path(data_pth,"exp1a","participants_150526.csv"))
 
@@ -103,7 +104,7 @@ p1 <- traj_k64 %>%
   ylim(-15,15) +
   #scale_linetype_manual(values=c("solid", "solid")) + 
   geom_point(data = traj_k64 %>% filter(t==max(t), object %in% c("o2","o7","o3","o5")), aes(xcoord, ycoord, fill = type), size = 4, shape = 16, show.legend=FALSE) +
-  geom_point(data = traj_k64 %>% filter(t==max(t), object %in% c("o1")), aes(xcoord, ycoord, fill = type), size = 4, shape = 1, show.legend=FALSE) +
+  geom_point(data = traj_k64 %>% filter(t==max(t), object %in% c("o1")), aes(xcoord, ycoord, fill = type), size = 4, shape = 1,  show.legend=FALSE) +
   #geom_point(data = traj_k64 %>% filter(t==max(t),object %in% c("o1","o2","o7","o4","o5")), aes(xcoord, ycoord, fill = type), size = 4, shape = 16, show.legend=FALSE) +
   guides(color = FALSE) +
   xlab("x [deg]") +
@@ -112,7 +113,7 @@ p1 <- traj_k64 %>%
   theme(plot.title = element_text(hjust = 0.5))
 p1
 ggsave(here::here("..", "plots", "Figure2.png"), p1, width = 6, height = 6)
-
+ggsave(here::here("..", "plots", "Figure2.eps"), p1, width = 6, height = 6)
 
 ggsave(here::here("..", "plots", "Figure2_t1.eps"), plot_trial_frame(t = 1), width = 6, height = 6)
 
@@ -145,8 +146,8 @@ df_exp1a %>%
   filter(restk2 == "Brownian-like") %>% 
   ez::ezANOVA(dv = accuracy,
         wid = subject,
-        within = type, 
-        detailed = T) %>% 
+        within = type2, 
+        detailed = T,) %>% 
   apa::anova_apa()
 
 df_exp1a %>% 
@@ -275,44 +276,6 @@ df_exp1b %>%
   knitr::kable(caption = "Results of within-subject ANCOVAs for each contrast level for movement variability")
 ```
 
-## Compute the asymmetry
-
-We run multiple within subject anova
-
-```{r exp 1b - compute the assymetry, warning=F,eval = FALSE}
-df3_exp1b <- df2_exp1b %>% group_by(type, restk) %>% do(p=compute.p(.))
-
-df3_exp1b$p <- unlist(df3_exp1b$p) %>% round(3)
-df4_exp1b <- df2_exp1b %>% group_by(type, restk) %>% do(ges=compute.des(.))
-df4_exp1b$ges <- unlist(df4_exp1b$ges) %>% round(2)
-df3_exp1b$ges <- df4_exp1b$ges
-
-df5_exp1b <- df2_exp1b %>% group_by(type, restk, version) %>% summarize(accuracy = mean(accuracy)) %>% 
-  group_by(type, restk) %>%
-  summarize(acc_diff = accuracy[version == "fix distractors' k"] - accuracy[version == "fix target's k"])
-
-m <- matrix(df3_exp1b$ges, nrow = 5)
-rownames(m) <- levels(df_exp1b$type)
-colnames(m) <- levels(df_exp1b$type)
-m[upper.tri(m,diag = T)] <- NA
-
-df3_exp1b$ges <- as.vector(m)
-
-m <- matrix(df3_exp1b$p, nrow = 5)
-m[upper.tri(m, diag = T)] <- NA
-df3_exp1b$p <- as.vector(m)
-
-m <- matrix(df5_exp1b$acc_diff, nrow = 5)
-m[upper.tri(m, diag = T)] <- NA
-df3_exp1b$acc_diff <- as.vector(m)
-
-
-df3_exp1b$target_lower_than_dist <- df3_exp1b$acc_diff < 0
-df3_exp1b %>% filter(target_lower_than_dist)
-
-df3_exp1b %>% filter(p < .05)
-```
-
 ## Test with baseline
 
 ```{r exp1b - test vs baseline}
@@ -326,6 +289,17 @@ df_exp1b %>%
   knitr::kable()
 ```
 
+## Overall test
+
+```{r exp1b overtall test}
+
+df_exp1b %>% 
+  filter(contrast_abs!=0) %>% 
+  ezANOVA(dv = accuracy, within = .(contrast_abs, target_straight), wid = id,
+          detailed = T) %>% 
+  apa::anova_apa(sph_corr = "none", es = "ges")
+
+```
 
 # Experiment 2a
 
@@ -520,6 +494,18 @@ ggsave(file.path(plot_pth, "Fig7_sp8.eps"), p_sp8, width = 6, height = 6)
 
 p <- plot_fig8()
 ggsave(file.path(plot_pth, "Figure8.png"), p, width = 9, height = 6)
+
+```
+
+## Overall test
+
+```{r exp2b overtall test}
+
+df_exp2b %>% 
+  filter(contrast_abs!=0) %>% 
+  ezANOVA(dv = accuracy, within = .(contrast_abs, target_faster), wid = id,
+          detailed = T) %>% 
+  apa::anova_apa(sph_corr = "none", es = "ges")
 
 ```
 
